@@ -30,10 +30,14 @@ function breached(rule, service) {
 /**
  * Dedup key now includes ruleId to prevent one rule from merging
  * with a different rule that happens to have the same type+threshold.
+ * When a rule is not persisted yet, keep the legacy three-part key so
+ * ad hoc callers and tests stay stable.
  */
 export function buildAlertDedupeKey(serviceId, rule) {
   const ruleId = rule._id ? String(rule._id) : "norule";
-  return `${serviceId}:${rule.type}:${rule.threshold}:${ruleId}`;
+  return ruleId === "norule"
+    ? `${serviceId}:${rule.type}:${rule.threshold}`
+    : `${serviceId}:${rule.type}:${rule.threshold}:${ruleId}`;
 }
 
 async function upsertAlert(service, rule) {

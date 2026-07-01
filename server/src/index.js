@@ -8,11 +8,28 @@ import { registerMonitoringJob } from "./jobs/monitoringJob.js";
 import { registerCleanupJob } from "./jobs/cleanupJob.js";
 import { setRealtimeServer } from "./services/realtimeService.js";
 import { verifyAccessToken } from "./utils/tokens.js";
+import { isAllowedBrowserOrigin } from "./utils/origin.js";
+
+const allowedOrigins = [
+  env.clientOrigin,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
 
 const app = createApp();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: [env.clientOrigin, "http://localhost:5173", "http://127.0.0.1:5173"], credentials: true },
+  cors: {
+    origin(origin, callback) {
+      if (isAllowedBrowserOrigin(origin, allowedOrigins)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  },
 });
 
 io.on("connection", (socket) => {
@@ -46,6 +63,8 @@ setRealtimeServer(io);
 registerMonitoringJob();
 registerCleanupJob();
 
-httpServer.listen(env.port, "127.0.0.1", () => {
-  logger.info("%s listening on http://127.0.0.1:%d", env.appName, env.port);
+const host = "0.0.0.0";
+
+httpServer.listen(env.port, host, () => {
+  logger.info("%s listening on http://%s:%d", env.appName, host, env.port);
 });

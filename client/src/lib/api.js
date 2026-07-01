@@ -1,8 +1,14 @@
 import { useAppStore, persistSession } from "../store/useAppStore.js";
 
 const viteEnv = typeof import.meta !== "undefined" && import.meta.env ? import.meta.env : {};
+const isLocalDev =
+  typeof window !== "undefined" &&
+  ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
 
-export const API_BASE = viteEnv.VITE_API_BASE || "http://127.0.0.1:4000/api";
+const DEFAULT_REMOTE_API_BASE = "https://smimp-backend.onrender.com/api";
+
+export const API_BASE =
+  viteEnv.VITE_API_BASE || (isLocalDev ? "http://127.0.0.1:4000/api" : DEFAULT_REMOTE_API_BASE);
 
 // Track if a token refresh is already in progress to avoid parallel refresh calls
 let refreshPromise = null;

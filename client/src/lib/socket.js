@@ -3,7 +3,13 @@ import { useEffect, useRef } from "react";
 import { useAppStore } from "../store/useAppStore.js";
 
 const viteEnv = typeof import.meta !== "undefined" && import.meta.env ? import.meta.env : {};
-const SOCKET_URL = viteEnv.VITE_SOCKET_URL || "http://127.0.0.1:4000";
+const isLocalDev =
+  typeof window !== "undefined" &&
+  ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+
+const DEFAULT_REMOTE_SOCKET_URL = "https://smimp-backend.onrender.com";
+const SOCKET_URL =
+  viteEnv.VITE_SOCKET_URL || (isLocalDev ? "http://127.0.0.1:4000" : DEFAULT_REMOTE_SOCKET_URL);
 
 let socket = null;
 
