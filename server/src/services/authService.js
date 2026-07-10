@@ -42,6 +42,11 @@ export async function loginUser({ email, password }) {
     throw new ApiError(401, "Invalid credentials");
   }
 
+  // Account was created via Google OAuth — no password set
+  if (!user.passwordHash) {
+    throw new ApiError(401, "This account uses Google Sign-In. Please use 'Continue with Google' to log in.");
+  }
+
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
     throw new ApiError(401, "Invalid credentials");

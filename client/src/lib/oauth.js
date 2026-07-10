@@ -9,8 +9,7 @@ export async function redirectToGoogle(state = "login") {
     const response = await apiGet("/auth/google/config");
     const clientId = response.data?.clientId;
     if (!clientId) {
-      alert("Google Client ID is not configured on the server. Please add GOOGLE_CLIENT_ID to the backend .env file.");
-      return;
+      throw new Error("Google Sign-In is not configured on this server.");
     }
     const redirectUri = window.location.origin + "/auth/google/callback";
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
