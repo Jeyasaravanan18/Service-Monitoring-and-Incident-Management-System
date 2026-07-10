@@ -1,27 +1,31 @@
 import { apiGet } from "./api.js";
 
 /**
- * Redirects the browser to Google's OAuth consent screen.
- * @param {"login" | "link"} state Defines if we are logging in or linking accounts.
+ * Check if Google OAuth is configured on the server.
+ * Returns the clientId if configured, or null if not.
  */
-export async function redirectToGoogle(state = "login") {
+export async function getGoogleClientId() {
   try {
     const response = await apiGet("/auth/google/config");
-    const clientId = response.data?.clientId;
-    if (!clientId) {
-      throw new Error("Google Sign-In is not configured on this server.");
-    }
-    const redirectUri = window.location.origin + "/auth/google/callback";
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-      clientId
-    )}&redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}&response_type=code&scope=${encodeURIComponent(
-      "openid profile email"
-    )}&state=${state}&prompt=select_account`;
-    window.location.href = googleAuthUrl;
-  } catch (err) {
-    console.error("Failed to retrieve Google config:", err);
-    alert("Failed to initialize Google login: " + err.message);
+    return response.data?.clientId || null;
+  } catch {
+    return null;
   }
+}
+
+/**
+ * Redirects the browser to Google's OAuth consent screen.
+ * @param {string} clientId The Google OAuth client ID.
+ * @param {"login" | "link"} state Defines if we are logging in or linking accounts.
+ */
+export function redirectToGoogle(clientId, state = "login") {
+  const redirectUri = window.location.origin + "/auth/google/callback";
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+    clientId
+  )}&redirect_uri=${encodeURIComponent(
+    redirectUri
+  )}&response_type=code&scope=${encodeURIComponent(
+    "openid profile email"
+  )}&state=${state}&prompt=select_account`;
+  window.location.href = googleAuthUrl;
 }
