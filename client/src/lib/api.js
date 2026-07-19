@@ -21,26 +21,11 @@ function getWorkspaceId() {
   return useAppStore.getState().workspaceId || null;
 }
 
-function getRefreshToken() {
-  // Try in-memory first, then localStorage fallback
-  const memRefresh = useAppStore.getState().refreshToken;
-  if (memRefresh) return memRefresh;
-  try {
-    const saved = JSON.parse(localStorage.getItem("smimp-user") || "null");
-    return saved?.refreshToken || null;
-  } catch {
-    return null;
-  }
-}
-
 async function doRefresh() {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) throw new Error("No refresh token available");
-
   const response = await fetch(`${API_BASE}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -82,7 +67,7 @@ async function request(path, options = {}, isRetry = false) {
     headers["X-Workspace-Id"] = workspaceId;
   }
 
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const response = await fetch(`${API_BASE}${path}`, { ...options, credentials: "include", headers });
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {

@@ -7,6 +7,16 @@ import { getGoogleUserProfile } from "../services/oauthService.js";
 import { requireAuth } from "../middleware/auth.js";
 import { ApiError } from "../utils/apiError.js";
 
+const setRefreshCookie = (res, token) => {
+  res.cookie("refreshToken", token, {
+    httpOnly: true,
+    secure: env.isProd,
+    sameSite: "strict",
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    path: "/api/auth",
+  });
+};
+
 const authSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -32,20 +42,23 @@ const router = Router();
 router.post("/register", asyncHandler(async (req, res) => {
   const payload = registerSchema.parse(req.body);
   const session = await registerUser(payload);
+  setRefreshCookie(res, session.refreshToken);
   res.status(201).json({ success: true, data: session });
 }));
 
 router.post("/login", asyncHandler(async (req, res) => {
   const payload = authSchema.parse(req.body);
   const session = await loginUser(payload);
+  setRefreshCookie(res, session.refreshToken);
   res.json({ success: true, data: session });
 }));
 
 router.post("/logout", asyncHandler(async (req, res) => {
-  const token = req.body.refreshToken;
+  const token = req.cookies.refreshToken;
   if (token) {
     await revokeRefreshToken(token);
   }
+  res.clearCookie("refreshToken", { path: "/api/auth" });
   res.json({
     success: true,
     data: {
@@ -55,11 +68,12 @@ router.post("/logout", asyncHandler(async (req, res) => {
 }));
 
 router.post("/refresh", asyncHandler(async (req, res) => {
-  const token = req.body.refreshToken;
+  const token = req.cookies.refreshToken;
   if (!token) {
-    throw new ApiError(400, "Refresh token required");
+    throw new ApiError(401, "Refresh token required");
   }
   const session = await rotateRefreshToken(token);
+  setRefreshCookie(res, session.refreshToken);
   res.json({ success: true, data: session });
 }));
 
@@ -134,6 +148,7 @@ router.post("/google", asyncHandler(async (req, res) => {
 
   const googleProfile = await getGoogleUserProfile(payload.code, payload.redirectUri);
   const session = await loginOrRegisterGoogleUser(googleProfile);
+  setRefreshCookie(res, session.refreshToken);
 
   res.json({
     success: true,

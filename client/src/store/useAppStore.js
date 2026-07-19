@@ -8,7 +8,6 @@ import { create } from "zustand";
 export const useAppStore = create((set, get) => ({
   user: null,
   token: null,        // access token — memory only, never persisted
-  refreshToken: null, // refresh token — stored in httpOnly cookie on server, kept here as fallback
   workspaceId: null,
   sidebarOpen: false,
   toasts: [], // Global toast notifications array
@@ -27,7 +26,6 @@ export const useAppStore = create((set, get) => ({
     set({
       user: session?.user || null,
       token: session?.accessToken || null,
-      refreshToken: session?.refreshToken || null,
       workspaceId:
         session?.workspaceId ||
         session?.user?.workspaceIds?.[0] ||
@@ -43,7 +41,7 @@ export const useAppStore = create((set, get) => ({
   logout: () => {
     // Remove only non-sensitive persisted data
     localStorage.removeItem("smimp-user");
-    set({ user: null, token: null, refreshToken: null, workspaceId: null });
+    set({ user: null, token: null, workspaceId: null });
   },
 }));
 
@@ -61,7 +59,6 @@ export function hydrateSession() {
     useAppStore.getState().setSession({
       user: saved?.user || null,
       accessToken: null,          // will be refreshed on first 401
-      refreshToken: saved?.refreshToken || null,
       workspaceId: saved?.workspaceId || null,
     });
     return saved;
@@ -80,7 +77,6 @@ export function persistSession(session) {
       "smimp-user",
       JSON.stringify({
         user: session?.user || null,
-        refreshToken: session?.refreshToken || null,
         workspaceId:
           session?.workspaceId ||
           session?.user?.workspaceIds?.[0] ||
