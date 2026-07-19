@@ -86,7 +86,7 @@ router.get("/:id/timeline", requireAuth, asyncHandler(async (req, res) => {
   });
 }));
 
-router.patch("/:id", requireAuth, asyncHandler(async (req, res) => {
+router.patch("/:id", requireAuth, requireRole(["super-admin", "admin", "engineer"]), asyncHandler(async (req, res) => {
   const payload = alertPatchSchema.parse(req.body);
   const workspaceId = resolveWorkspaceId(req);
   const alert = await Alert.findOneAndUpdate({ _id: req.params.id, workspaceId }, { $set: payload }, { new: true });
@@ -95,7 +95,7 @@ router.patch("/:id", requireAuth, asyncHandler(async (req, res) => {
   res.json({ success: true, data: alert });
 }));
 
-router.post("/:id/ack", requireAuth, asyncHandler(async (req, res) => {
+router.post("/:id/ack", requireAuth, requireRole(["super-admin", "admin", "engineer"]), asyncHandler(async (req, res) => {
   const workspaceId = resolveWorkspaceId(req);
   const alert = await Alert.findOneAndUpdate({ _id: req.params.id, workspaceId }, { $set: { status: "acknowledged" } }, { new: true });
   if (!alert) throw new ApiError(404, "Alert not found");
@@ -103,7 +103,7 @@ router.post("/:id/ack", requireAuth, asyncHandler(async (req, res) => {
   res.json({ success: true, data: alert });
 }));
 
-router.post("/:id/resolve", requireAuth, asyncHandler(async (req, res) => {
+router.post("/:id/resolve", requireAuth, requireRole(["super-admin", "admin", "engineer"]), asyncHandler(async (req, res) => {
   const workspaceId = resolveWorkspaceId(req);
   const alert = await Alert.findOneAndUpdate({ _id: req.params.id, workspaceId }, { $set: { status: "resolved" } }, { new: true });
   if (!alert) throw new ApiError(404, "Alert not found");
@@ -111,7 +111,7 @@ router.post("/:id/resolve", requireAuth, asyncHandler(async (req, res) => {
   res.json({ success: true, data: alert });
 }));
 
-router.post("/:id/escalate", requireAuth, asyncHandler(async (req, res) => {
+router.post("/:id/escalate", requireAuth, requireRole(["super-admin", "admin", "engineer"]), asyncHandler(async (req, res) => {
   const workspaceId = resolveWorkspaceId(req);
   const alert = await Alert.findOne({ _id: req.params.id, workspaceId }).lean();
   if (!alert) throw new ApiError(404, "Alert not found");
