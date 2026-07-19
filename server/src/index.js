@@ -7,6 +7,7 @@ import { createApp } from "./app.js";
 import { registerMonitoringJob } from "./jobs/monitoringJob.js";
 import { registerCleanupJob } from "./jobs/cleanupJob.js";
 import { setRealtimeServer } from "./services/realtimeService.js";
+import { recoverPendingEscalations } from "./services/escalationService.js";
 import { verifyAccessToken } from "./utils/tokens.js";
 import { isAllowedBrowserOrigin } from "./utils/origin.js";
 
@@ -62,6 +63,7 @@ await connectDb();
 setRealtimeServer(io);
 registerMonitoringJob();
 registerCleanupJob();
+await recoverPendingEscalations();
 
 const host = "0.0.0.0";
 
