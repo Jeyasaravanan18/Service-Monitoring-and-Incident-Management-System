@@ -138,6 +138,7 @@ router.delete("/:id", requireAuth, requireRole(["super-admin", "admin"]), asyncH
       DeploymentEvent.deleteMany({ serviceId: service._id }),
       ServiceDependency.deleteMany({ $or: [{ serviceId: service._id }, { dependsOnServiceId: service._id }] }),
       SLOTarget.deleteMany({ serviceId: service._id }),
+      Incident.deleteMany({ serviceId: service._id }),
     ]);
     
     await recordAuditLog({

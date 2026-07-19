@@ -13,8 +13,7 @@ import {
   Incident,
   ServiceDependency,
   Team,
-  User,
-  WorkspaceMember
+  User
 } from "../src/models/index.js";
 import { signAccessToken } from "../src/utils/tokens.js";
 import crypto from "crypto";
@@ -53,27 +52,23 @@ describe("Cascading Cleanup on Service Deletion", () => {
       name: "Test User"
     });
     
-    const workspace = await Workspace.create({ name: "Test Workspace" });
-    
-    await WorkspaceMember.create({
-      workspaceId: workspace._id,
-      userId: user._id,
-      role: "admin"
-    });
+    const workspace = await Workspace.create({ name: "Test Workspace", slug: "test-workspace" });
     
     const service = await Service.create({
       workspaceId: workspace._id,
       name: "Test Service",
+      url: "http://example.com"
     });
 
     const otherService = await Service.create({
       workspaceId: workspace._id,
       name: "Other Service",
+      url: "http://example2.com"
     });
     
     await Metric.create({ workspaceId: workspace._id, serviceId: service._id, name: "cpu", value: 50 });
     await LogEntry.create({ workspaceId: workspace._id, serviceId: service._id, message: "test log", severity: "info" });
-    await CheckResult.create({ serviceId: service._id, ok: true, durationMs: 100 });
+    await CheckResult.create({ workspaceId: workspace._id, serviceId: service._id, ok: true, durationMs: 100, latencyMs: 100, statusCode: 200 });
     const rule = await AlertRule.create({ workspaceId: workspace._id, serviceId: service._id, name: "rule", type: "uptime", threshold: 99 });
     await Alert.create({ workspaceId: workspace._id, serviceId: service._id, ruleId: rule._id, title: "alert", dedupeKey: "key" });
     await Incident.create({ workspaceId: workspace._id, serviceId: service._id, title: "incident", severity: "high" });
@@ -91,7 +86,8 @@ describe("Cascading Cleanup on Service Deletion", () => {
     const token = signAccessToken({
       sub: user._id.toString(),
       email: user.email,
-      workspaceIds: [workspace._id.toString()]
+      workspaceIds: [workspace._id.toString()],
+      workspaceRoles: [{ workspaceId: workspace._id.toString(), role: "admin" }]
     });
     
     const res = await request(app)
