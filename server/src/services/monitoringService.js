@@ -2,6 +2,7 @@ import { CheckResult, Service } from "../models/index.js";
 import { evaluateAlertsForService } from "./alertService.js";
 import { emitRealtime } from "./realtimeService.js";
 import { computeHealthScore } from "../utils/health.js";
+import { decrypt } from "../utils/crypto.js";
 import logger from "../config/logger.js";
 
 const MAX_RETRY_ATTEMPTS = 2;
@@ -15,7 +16,13 @@ function sleep(ms) {
 function normalizeHeaders(service) {
   const headers = { ...(service.customHeaders || {}) };
   if (service.apiKey) {
-    headers.Authorization = headers.Authorization || `Bearer ${service.apiKey}`;
+    try {
+      const decryptedKey = decrypt(service.apiKey);
+      headers.Authorization = headers.Authorization || `Bearer ${decryptedKey}`;
+    } catch (e) {
+      logger.error("Failed to decrypt apiKey for service %s: %s", service._id, e.message);
+      // Fallback or leave it out if we can't decrypt
+    }
   }
   return headers;
 }

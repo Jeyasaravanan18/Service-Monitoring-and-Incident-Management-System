@@ -8,6 +8,7 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { recordAuditLog } from "../services/auditService.js";
 import { emitRealtime } from "../services/realtimeService.js";
 import { resolveWorkspaceId } from "../utils/workspace.js";
+import { encrypt } from "../utils/crypto.js";
 
 const serviceSchema = z.object({
   name: z.string().min(2),
@@ -42,6 +43,9 @@ router.post("/", requireAuth, requireRole(["super-admin", "admin"]), asyncHandle
   const workspaceId = workspaceIdFor(req);
   if (!workspaceId) throw new ApiError(400, "Workspace context required");
   const payload = serviceSchema.parse(req.body);
+  if (payload.apiKey) {
+    payload.apiKey = encrypt(payload.apiKey);
+  }
   const service = await Service.create({ ...payload, workspaceId });
   await recordAuditLog({
     workspaceId,
@@ -89,6 +93,9 @@ router.get("/:id", requireAuth, asyncHandler(async (req, res) => {
 router.patch("/:id", requireAuth, requireRole(["super-admin", "admin"]), asyncHandler(async (req, res) => {
   const workspaceId = workspaceIdFor(req);
   const payload = serviceSchema.partial().parse(req.body);
+  if (payload.apiKey) {
+    payload.apiKey = encrypt(payload.apiKey);
+  }
   const service = await Service.findOneAndUpdate(
     { _id: req.params.id, workspaceId },
     { $set: payload },

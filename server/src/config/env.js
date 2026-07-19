@@ -22,6 +22,10 @@ if (!process.env.MONGO_URI && !process.env.MONGODB_URI) {
   errors.push("MONGO_URI is required");
 }
 
+if (!process.env.ENCRYPTION_KEY || Buffer.from(process.env.ENCRYPTION_KEY, "base64").length !== 32) {
+  errors.push("ENCRYPTION_KEY must be a 32-byte base64 string");
+}
+
 if (isProd) {
   if (!process.env.JWT_ACCESS_SECRET || process.env.JWT_ACCESS_SECRET === "dev-access-secret") {
     errors.push("JWT_ACCESS_SECRET must be set to a secure value in production");
@@ -56,6 +60,7 @@ const env = {
   notificationSlackWebhookUrl: process.env.NOTIFICATION_SLACK_WEBHOOK_URL || "",
   googleClientId: process.env.GOOGLE_CLIENT_ID || "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+  encryptionKey: process.env.ENCRYPTION_KEY || "",
 };
 
 export default env;
