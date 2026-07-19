@@ -103,7 +103,7 @@ Code is covered by a suite of **integration tests** using Jest, Supertest, and a
    JWT_REFRESH_SECRET=your_super_secret_refresh_key
    GEMINI_API_KEY=your_google_gemini_key
    APP_NAME=Service Monitoring and Incident Management Platform
-   ENCRYPTION_KEY=a_32_byte_hex_string_here
+   ENCRYPTION_KEY=a_32_byte_base64_string_here
    ALLOW_INTERNAL_TARGETS=false
    ```
 

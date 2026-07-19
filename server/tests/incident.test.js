@@ -26,7 +26,7 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();
   
-  process.env.ENCRYPTION_KEY = crypto.randomBytes(32).toString("hex");
+  process.env.ENCRYPTION_KEY = crypto.randomBytes(32).toString("base64");
   process.env.JWT_ACCESS_SECRET = "test-secret";
   process.env.JWT_ACCESS_TTL = "15m";
   
