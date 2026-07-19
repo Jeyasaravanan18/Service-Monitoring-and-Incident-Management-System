@@ -61,6 +61,7 @@ const env = {
   googleClientId: process.env.GOOGLE_CLIENT_ID || "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
   encryptionKey: process.env.ENCRYPTION_KEY || "",
+  allowInternalTargets: process.env.ALLOW_INTERNAL_TARGETS === "true",
 };
 
 export default env;

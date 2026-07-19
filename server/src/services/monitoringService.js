@@ -4,6 +4,31 @@ import { emitRealtime } from "./realtimeService.js";
 import { computeHealthScore } from "../utils/health.js";
 import { decrypt } from "../utils/crypto.js";
 import logger from "../config/logger.js";
+import dns from "node:dns";
+import { promisify } from "node:util";
+import env from "../config/env.js";
+
+const lookupAsync = promisify(dns.lookup);
+
+function isInternalIP(ip) {
+  // IPv4 Private
+  if (ip.startsWith("10.")) return true;
+  if (ip.startsWith("172.")) {
+    const secondOctet = parseInt(ip.split(".")[1], 10);
+    if (secondOctet >= 16 && secondOctet <= 31) return true;
+  }
+  if (ip.startsWith("192.168.")) return true;
+  // IPv4 Loopback and Link Local
+  if (ip.startsWith("127.")) return true;
+  if (ip.startsWith("169.254.")) return true;
+  
+  // IPv6
+  if (ip === "::1") return true;
+  if (ip.toLowerCase().startsWith("fc") || ip.toLowerCase().startsWith("fd")) return true;
+  if (ip.toLowerCase().startsWith("fe80")) return true;
+
+  return false;
+}
 
 const MAX_RETRY_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 2000; // 2s between retries
@@ -33,6 +58,19 @@ async function runHttpCheck(service) {
   const startedAt = Date.now();
 
   try {
+    const urlObj = new URL(service.url);
+    const { address } = await lookupAsync(urlObj.hostname);
+    if (!env.allowInternalTargets && isInternalIP(address)) {
+      return {
+        ok: false,
+        latencyMs: Date.now() - startedAt,
+        statusCode: 0,
+        keywordMatched: false,
+        errorMessage: `Target IP ${address} is an internal/private address. This is not allowed.`,
+        responseSnippet: "",
+      };
+    }
+
     const response = await fetch(service.url, {
       method: "GET",
       headers: normalizeHeaders(service),
