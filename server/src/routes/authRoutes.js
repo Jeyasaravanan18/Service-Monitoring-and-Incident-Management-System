@@ -4,6 +4,7 @@ import { z } from "zod";
 import env from "../config/env.js";
 import { loginUser, registerUser, revokeRefreshToken, rotateRefreshToken, resendVerificationEmail, resetPasswordWithToken, verifyEmailWithToken, sendPasswordReset, loginOrRegisterGoogleUser, linkGoogleAccount } from "../services/authService.js";
 import { getGoogleUserProfile } from "../services/oauthService.js";
+import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/auth.js";
 import { ApiError } from "../utils/apiError.js";
 
@@ -37,16 +38,26 @@ const resetSchema = z.object({
   password: z.string().min(8),
 });
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res, next) => {
+    next(new ApiError(429, "Too many requests, please try again later."));
+  },
+});
+
 const router = Router();
 
-router.post("/register", asyncHandler(async (req, res) => {
+router.post("/register", authLimiter, asyncHandler(async (req, res) => {
   const payload = registerSchema.parse(req.body);
   const session = await registerUser(payload);
   setRefreshCookie(res, session.refreshToken);
   res.status(201).json({ success: true, data: session });
 }));
 
-router.post("/login", asyncHandler(async (req, res) => {
+router.post("/login", authLimiter, asyncHandler(async (req, res) => {
   const payload = authSchema.parse(req.body);
   const session = await loginUser(payload);
   setRefreshCookie(res, session.refreshToken);
@@ -86,7 +97,7 @@ router.get("/me", requireAuth, asyncHandler(async (req, res) => {
   });
 }));
 
-router.post("/forgot-password", asyncHandler(async (req, res) => {
+router.post("/forgot-password", authLimiter, asyncHandler(async (req, res) => {
   const payload = forgotSchema.parse(req.body);
   await sendPasswordReset(payload.email);
   res.json({
