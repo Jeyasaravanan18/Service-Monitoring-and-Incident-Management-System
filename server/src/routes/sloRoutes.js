@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { SLOTarget } from "../models/index.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { resolveWorkspaceId } from "../utils/workspace.js";
 
 const sloSchema = z.object({
   serviceId: z.string(),
@@ -22,8 +23,7 @@ router.get("/", requireAuth, asyncHandler(async (req, res) => {
 
 router.post("/", requireAuth, requireRole(["super-admin", "admin"]), asyncHandler(async (req, res) => {
   const payload = sloSchema.parse(req.body);
-  const workspaceId = req.auth.workspaceIds?.[0] || req.headers["x-workspace-id"];
-  if (!workspaceId) throw new ApiError(400, "Workspace context required");
+  const workspaceId = resolveWorkspaceId(req);
 
   const target = await SLOTarget.create({ ...payload, workspaceId });
   res.status(201).json({ success: true, data: target });
@@ -31,7 +31,7 @@ router.post("/", requireAuth, requireRole(["super-admin", "admin"]), asyncHandle
 
 router.patch("/:id", requireAuth, requireRole(["super-admin", "admin"]), asyncHandler(async (req, res) => {
   const payload = sloSchema.partial().parse(req.body);
-  const workspaceId = req.auth.workspaceIds?.[0] || req.headers["x-workspace-id"];
+  const workspaceId = resolveWorkspaceId(req);
   
   const target = await SLOTarget.findOneAndUpdate({ _id: req.params.id, workspaceId }, { $set: payload }, { new: true });
   if (!target) throw new ApiError(404, "SLO target not found");
@@ -39,7 +39,7 @@ router.patch("/:id", requireAuth, requireRole(["super-admin", "admin"]), asyncHa
 }));
 
 router.delete("/:id", requireAuth, requireRole(["super-admin", "admin"]), asyncHandler(async (req, res) => {
-  const workspaceId = req.auth.workspaceIds?.[0] || req.headers["x-workspace-id"];
+  const workspaceId = resolveWorkspaceId(req);
   const target = await SLOTarget.findOneAndDelete({ _id: req.params.id, workspaceId });
   if (!target) throw new ApiError(404, "SLO target not found");
   res.json({ success: true, data: target });

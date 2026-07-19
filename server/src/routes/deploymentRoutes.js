@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { DeploymentEvent } from "../models/index.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { resolveWorkspaceId } from "../utils/workspace.js";
 
 const deploymentSchema = z.object({
   serviceId: z.string(),
@@ -23,8 +24,7 @@ router.get("/", requireAuth, asyncHandler(async (req, res) => {
 
 router.post("/", requireAuth, requireRole(["super-admin", "admin", "engineer"]), asyncHandler(async (req, res) => {
   const payload = deploymentSchema.parse(req.body);
-  const workspaceId = req.auth.workspaceIds?.[0] || req.headers["x-workspace-id"];
-  if (!workspaceId) throw new ApiError(400, "Workspace context required");
+  const workspaceId = resolveWorkspaceId(req);
 
   const deployment = await DeploymentEvent.create({
     ...payload,
@@ -36,7 +36,7 @@ router.post("/", requireAuth, requireRole(["super-admin", "admin", "engineer"]),
 
 router.patch("/:id", requireAuth, requireRole(["super-admin", "admin", "engineer"]), asyncHandler(async (req, res) => {
   const payload = deploymentSchema.partial().parse(req.body);
-  const workspaceId = req.auth.workspaceIds?.[0] || req.headers["x-workspace-id"];
+  const workspaceId = resolveWorkspaceId(req);
   
   const update = { ...payload };
   if (payload.deployedAt) update.deployedAt = new Date(payload.deployedAt);
@@ -46,7 +46,7 @@ router.patch("/:id", requireAuth, requireRole(["super-admin", "admin", "engineer
 }));
 
 router.delete("/:id", requireAuth, requireRole(["super-admin", "admin"]), asyncHandler(async (req, res) => {
-  const workspaceId = req.auth.workspaceIds?.[0] || req.headers["x-workspace-id"];
+  const workspaceId = resolveWorkspaceId(req);
   const deployment = await DeploymentEvent.findOneAndDelete({ _id: req.params.id, workspaceId });
   if (!deployment) throw new ApiError(404, "Deployment not found");
   res.json({ success: true, data: deployment });
