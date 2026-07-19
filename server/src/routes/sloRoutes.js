@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
-import { SLOTarget } from "../models/index.js";
+import { SLOTarget, CheckResult } from "../models/index.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { resolveWorkspaceId } from "../utils/workspace.js";
 
@@ -18,7 +18,32 @@ const router = Router();
 
 router.get("/", requireAuth, asyncHandler(async (req, res) => {
   const targets = await SLOTarget.find({ workspaceId: { $in: req.auth.workspaceIds || [] } }).sort({ createdAt: -1 }).lean();
-  res.json({ success: true, data: targets });
+  
+  // Compute errorBudgetBurnRate for each target
+  const now = new Date();
+  const enhancedTargets = await Promise.all(targets.map(async (target) => {
+    const windowDays = target.windowDays || 30;
+    const since = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000);
+    
+    const [totalChecks, failedChecks] = await Promise.all([
+      CheckResult.countDocuments({ serviceId: target.serviceId, checkedAt: { $gte: since } }),
+      CheckResult.countDocuments({ serviceId: target.serviceId, checkedAt: { $gte: since }, ok: false }),
+    ]);
+
+    let burnRate = 0;
+    if (totalChecks > 0) {
+      const actualErrorRate = failedChecks / totalChecks;
+      const allowedErrorRate = Math.max(0, (100 - (target.objective || 100)) / 100);
+      
+      if (allowedErrorRate > 0) {
+        burnRate = Math.round((actualErrorRate / allowedErrorRate) * 100) / 100;
+      }
+    }
+
+    return { ...target, errorBudgetBurnRate: burnRate };
+  }));
+
+  res.json({ success: true, data: enhancedTargets });
 }));
 
 router.post("/", requireAuth, requireRole(["super-admin", "admin"]), asyncHandler(async (req, res) => {
