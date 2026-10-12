@@ -203,7 +203,7 @@ export function AppShell({ children }) {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="status-dot pulse" />
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#34d399", letterSpacing: "0.02em" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-dark-green)", letterSpacing: "0.02em" }}>
               Telemetry Active
             </span>
           </div>
@@ -345,7 +345,7 @@ export function Topbar() {
         {/* Quick Action Button & Dropdown */}
         <div style={{ position: "relative" }}>
           <button 
-            className="button primary" 
+            className="button black" 
             style={{ height: "36px", padding: "0 14px", gap: 6 }}
             onClick={() => {
               setQuickCreateOpen(!quickCreateOpen);

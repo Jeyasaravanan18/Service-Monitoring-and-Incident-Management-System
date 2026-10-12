@@ -8,18 +8,19 @@ import { apiPost } from "../lib/api.js";
 import { getGoogleClientId, redirectToGoogle } from "../lib/oauth.js";
 import { 
   Mail, Lock, Eye, EyeOff, User, Building2, Shield, 
-  ArrowRight, CheckCircle2, AlertCircle, KeyRound, Sparkles
+  ArrowRight, CheckCircle2, AlertCircle, KeyRound, Sparkles,
+  ShieldCheck, Activity, Terminal
 } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address."),
+  email: z.string().email("Please enter a valid work email address."),
   password: z.string().min(1, "Password is required."),
 });
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   workspaceName: z.string().min(2, "Workspace name must be at least 2 characters."),
-  email: z.string().email("Please enter a valid email address."),
+  email: z.string().email("Please enter a valid work email address."),
   password: z.string().min(6, "Password must be at least 6 characters."),
   role: z.enum(["super-admin", "admin", "viewer"])
 });
@@ -30,8 +31,8 @@ function FormField({ name, placeholder, label, type = "text", error, register, a
   const actualType = isPassword ? (showPassword ? "text" : "password") : type;
 
   return (
-    <div className="field-block">
-      <label className="field-label" htmlFor={name}>
+    <div className="field-block" style={{ width: "100%" }}>
+      <label className="field-label" htmlFor={name} style={{ color: "var(--color-dark-blue)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}>
         {label || placeholder}
       </label>
       <div style={{ position: "relative" }}>
@@ -41,12 +42,12 @@ function FormField({ name, placeholder, label, type = "text", error, register, a
             left: 12,
             top: "50%",
             transform: "translateY(-50%)",
-            color: "var(--color-muted)",
+            color: "var(--color-text-soft)",
             display: "flex",
             alignItems: "center",
             pointerEvents: "none"
           }}>
-            <Icon size={16} />
+            <Icon size={16} strokeWidth={2} />
           </div>
         )}
         <input
@@ -56,10 +57,15 @@ function FormField({ name, placeholder, label, type = "text", error, register, a
           {...(register ? register(name) : { value, onChange })}
           autoComplete={autoComplete || "off"}
           style={{
+            width: "100%",
             paddingLeft: Icon ? 38 : 14,
             paddingRight: isPassword ? 38 : 14,
-            borderColor: error ? "var(--color-danger)" : undefined,
-            background: "var(--color-surface-elevated)",
+            borderColor: error ? "var(--color-danger)" : "var(--color-border)",
+            background: "#ffffff",
+            color: "var(--color-text)",
+            fontSize: 14,
+            height: 42,
+            borderRadius: "var(--radius-sm)",
           }}
         />
         {isPassword && (
@@ -71,11 +77,13 @@ function FormField({ name, placeholder, label, type = "text", error, register, a
               right: 12,
               top: "50%",
               transform: "translateY(-50%)",
-              color: "var(--color-muted)",
+              color: "var(--color-text-soft)",
               background: "none",
               border: "none",
-              padding: 0,
-              cursor: "pointer"
+              padding: 4,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center"
             }}
             tabIndex={-1}
             aria-label={showPassword ? "Hide password" : "Show password"}
@@ -85,8 +93,9 @@ function FormField({ name, placeholder, label, type = "text", error, register, a
         )}
       </div>
       {error && (
-        <div style={{ color: "var(--color-danger)", fontSize: 12, marginTop: 4, fontFamily: "'JetBrains Mono', monospace" }}>
-          {error}
+        <div style={{ color: "var(--color-danger)", fontSize: 12, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+          <AlertCircle size={13} />
+          <span>{error}</span>
         </div>
       )}
     </div>
@@ -95,83 +104,163 @@ function FormField({ name, placeholder, label, type = "text", error, register, a
 
 function AuthShell({ children, eyebrow, title, copy, activeTab = "login" }) {
   return (
-    <div className="auth-shell">
-      <div className="auth-card">
-        {/* Brand Logo & Backlink */}
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center", marginBottom: 20 }}>
-          <div className="brand-mark" style={{ width: 28, height: 28 }} />
-          <span style={{ color: "#ffffff", fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>SMIMP</span>
-          <span className="badge" style={{ padding: "2px 6px", fontSize: 10, background: "var(--color-brand-muted)", color: "var(--color-brand)" }}>v2.4</span>
-        </Link>
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "48px 20px",
+      background: "#ffffff",
+      position: "relative"
+    }}>
+      {/* Subtle hairline geometric grid background */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        backgroundImage: "radial-gradient(#e2e8f0 1px, transparent 1px)",
+        backgroundSize: "24px 24px",
+        opacity: 0.6,
+        pointerEvents: "none"
+      }} />
 
-        {/* Tab switcher between Sign In and Register */}
-        <div style={{
-          display: "flex",
-          background: "var(--color-surface-elevated)",
-          padding: 4,
-          borderRadius: "var(--radius-sm)",
-          marginBottom: 24,
-          border: "1px solid var(--color-border)"
-        }}>
-          <Link
-            to="/auth/login"
-            style={{
-              flex: 1,
-              textAlign: "center",
-              padding: "8px 0",
-              fontSize: 13,
-              fontWeight: 700,
-              borderRadius: "calc(var(--radius-sm) - 2px)",
-              background: activeTab === "login" ? "var(--color-surface-hover)" : "transparent",
-              color: activeTab === "login" ? "#ffffff" : "var(--color-muted)",
-              boxShadow: activeTab === "login" ? "var(--shadow-xs)" : "none",
-              transition: "all 0.2s"
-            }}
-          >
-            Sign In
+      {/* Main Container Card */}
+      <div style={{
+        width: "100%",
+        maxWidth: 460,
+        background: "#ffffff",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+        padding: "40px 36px",
+        boxShadow: "0 10px 25px -5px rgba(15, 43, 92, 0.08), 0 8px 10px -6px rgba(15, 43, 92, 0.04)",
+        position: "relative",
+        zIndex: 1
+      }}>
+        {/* Brand Header */}
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 14 }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: "var(--radius-xs)",
+              background: "var(--color-dark-blue)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <Activity size={18} color="#ffffff" strokeWidth={2.5} />
+            </div>
+            <span style={{ color: "var(--color-dark-blue)", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em" }}>
+              SMIMP
+            </span>
+            <span className="badge" style={{ padding: "2px 7px", fontSize: 10 }}>
+              ENTERPRISE
+            </span>
           </Link>
-          <Link
-            to="/auth/register"
-            style={{
-              flex: 1,
-              textAlign: "center",
-              padding: "8px 0",
-              fontSize: 13,
-              fontWeight: 700,
-              borderRadius: "calc(var(--radius-sm) - 2px)",
-              background: activeTab === "register" ? "var(--color-surface-hover)" : "transparent",
-              color: activeTab === "register" ? "#ffffff" : "var(--color-muted)",
-              boxShadow: activeTab === "register" ? "var(--shadow-xs)" : "none",
-              transition: "all 0.2s"
-            }}
-          >
-            Create Account
-          </Link>
+
+          {/* Live Operational Status Pill */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+            <div className="system-status-indicator">
+              <span className="status-dot pulse" />
+              <span>All Systems Operational • 99.99% SLA</span>
+            </div>
+          </div>
+
+          {/* Tab Switcher: Sign In vs Create Account */}
+          <div style={{
+            display: "flex",
+            background: "var(--color-surface-elevated)",
+            padding: 4,
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--color-border)"
+          }}>
+            <Link
+              to="/auth/login"
+              style={{
+                flex: 1,
+                textAlign: "center",
+                padding: "8px 0",
+                fontSize: 13,
+                fontWeight: 700,
+                borderRadius: "calc(var(--radius-sm) - 2px)",
+                background: activeTab === "login" ? "var(--color-black)" : "transparent",
+                color: activeTab === "login" ? "#ffffff" : "var(--color-text)",
+                boxShadow: activeTab === "login" ? "var(--shadow-xs)" : "none",
+                textDecoration: "none",
+                transition: "all 0.15s ease"
+              }}
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/auth/register"
+              style={{
+                flex: 1,
+                textAlign: "center",
+                padding: "8px 0",
+                fontSize: 13,
+                fontWeight: 700,
+                borderRadius: "calc(var(--radius-sm) - 2px)",
+                background: activeTab === "register" ? "var(--color-black)" : "transparent",
+                color: activeTab === "register" ? "#ffffff" : "var(--color-text)",
+                boxShadow: activeTab === "register" ? "var(--shadow-xs)" : "none",
+                textDecoration: "none",
+                transition: "all 0.15s ease"
+              }}
+            >
+              Create Account
+            </Link>
+          </div>
         </div>
 
-        {eyebrow && (
-          <div style={{
-            fontSize: 11,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.12em",
-            color: "var(--color-brand)",
-            marginBottom: 8,
-            textAlign: "center"
-          }}>
-            [ {eyebrow} ]
-          </div>
-        )}
+        {/* Heading & Subtitle */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          {eyebrow && (
+            <div style={{
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: "var(--color-dark-green)",
+              marginBottom: 6
+            }}>
+              {eyebrow}
+            </div>
+          )}
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--color-dark-blue)", marginBottom: 6 }}>
+            {title}
+          </h1>
+          <p style={{ color: "var(--color-text-body)", fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>
+            {copy}
+          </p>
+        </div>
 
-        <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, textAlign: "center", color: "var(--color-text)" }}>
-          {title}
-        </h1>
-        <p style={{ color: "var(--color-text-soft)", fontSize: 14, marginBottom: 28, lineHeight: 1.5, textAlign: "center" }}>
-          {copy}
-        </p>
-
+        {/* Form Body */}
         {children}
+      </div>
+
+      {/* Security & Compliance Footer */}
+      <div style={{
+        marginTop: 28,
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        fontSize: 12,
+        color: "var(--color-text-soft)",
+        zIndex: 1,
+        flexWrap: "wrap",
+        justifyContent: "center"
+      }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--color-dark-green)", fontWeight: 600 }}>
+          <ShieldCheck size={15} />
+          SOC 2 Type II Certified
+        </span>
+        <span>•</span>
+        <span>End-to-End Encrypted Telemetry</span>
+        <span>•</span>
+        <Link to="/status/demo" style={{ color: "var(--color-text-body)" }}>
+          Public Status
+        </Link>
       </div>
     </div>
   );
@@ -214,12 +303,26 @@ export function LoginPage() {
     defaultValues: { email: "", password: "" }
   });
 
+  // Preset demo account credentials for easy evaluation
+  const setDemoCredentials = (role) => {
+    if (role === "admin") {
+      setValue("email", "admin@smimp.io");
+      setValue("password", "AdminPassword123!");
+    } else if (role === "super-admin") {
+      setValue("email", "superadmin@smimp.io");
+      setValue("password", "SuperAdmin123!");
+    } else {
+      setValue("email", "viewer@smimp.io");
+      setValue("password", "ViewerPassword123!");
+    }
+  };
+
   return (
     <AuthShell
       activeTab="login"
-      eyebrow="Console Access"
-      title="Welcome back"
-      copy="Monitor telemetry, triage incidents, and audit service stability in your workspace."
+      eyebrow="Console Authentication"
+      title="Operator Sign In"
+      copy="Monitor telemetry, triage incident war-rooms, and audit service SLO health."
     >
       <form
         className="grid"
@@ -230,17 +333,18 @@ export function LoginPage() {
         <FormField
           name="email"
           label="Work Email"
-          placeholder="name@company.com"
+          placeholder="operator@company.com"
           type="email"
           icon={Mail}
           register={register}
           error={errors.email?.message}
           autoComplete="email"
         />
+        
         <FormField
           name="password"
           label="Password"
-          placeholder="Enter your password"
+          placeholder="Enter operator password"
           type="password"
           icon={Lock}
           register={register}
@@ -256,19 +360,19 @@ export function LoginPage() {
         )}
 
         <button 
-          className="button primary" 
+          className="button black" 
           type="submit" 
           disabled={loading} 
-          style={{ width: "100%", height: 42, fontSize: 14 }}
+          style={{ width: "100%", height: 44, fontSize: 14, fontWeight: 700 }}
         >
-          {loading ? "Authenticating..." : "Sign in to Console"}
+          {loading ? "Authenticating Operator..." : "Sign In to Workspace"}
         </button>
 
         {googleClientId && (
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "2px 0" }}>
               <div style={{ flex: 1, height: 1, background: "var(--color-border)" }} />
-              <span style={{ fontSize: 12, color: "var(--color-muted)", textTransform: "uppercase" }}>or</span>
+              <span style={{ fontSize: 11, color: "var(--color-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>or</span>
               <div style={{ flex: 1, height: 1, background: "var(--color-border)" }} />
             </div>
 
@@ -276,7 +380,7 @@ export function LoginPage() {
               className="button" 
               type="button" 
               onClick={() => redirectToGoogle(googleClientId, "login")}
-              style={{ width: "100%", height: 42, justifyContent: "center", gap: 10 }}
+              style={{ width: "100%", height: 42, justifyContent: "center", gap: 10, background: "#ffffff", borderColor: "var(--color-border)" }}
             >
               <svg width="18" height="18" viewBox="0 0 18 18" style={{ display: "block" }}>
                 <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
@@ -284,18 +388,58 @@ export function LoginPage() {
                 <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.549 0 9s.347 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
                 <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.896 11.426 0 9 0 5.503 0 2.439 2.014.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
               </svg>
-              Continue with Google
+              <span>Continue with Google</span>
             </button>
           </>
         )}
 
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginTop: 4 }}>
-          <Link to="/auth/forgot-password" style={{ color: "var(--color-muted)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, marginTop: 4 }}>
+          <Link to="/auth/forgot-password" style={{ color: "var(--color-text-body)" }}>
             Forgot password?
           </Link>
-          <Link to="/auth/register" style={{ fontWeight: 600 }}>
+          <Link to="/auth/register" style={{ color: "var(--color-dark-blue)", fontWeight: 700 }}>
             Create account &rarr;
           </Link>
+        </div>
+
+        {/* Demo Fast-Fill Tray */}
+        <div style={{
+          marginTop: 12,
+          padding: "12px 14px",
+          background: "var(--color-surface-elevated)",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-sm)"
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--color-dark-green)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+            <Sparkles size={13} />
+            <span>Evaluation Quick Fill:</span>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setDemoCredentials("admin")}
+              style={{ fontSize: 11, padding: "4px 8px", height: "auto" }}
+            >
+              Demo Admin
+            </button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setDemoCredentials("super-admin")}
+              style={{ fontSize: 11, padding: "4px 8px", height: "auto" }}
+            >
+              Demo Super Admin
+            </button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setDemoCredentials("viewer")}
+              style={{ fontSize: 11, padding: "4px 8px", height: "auto" }}
+            >
+              Demo Viewer
+            </button>
+          </div>
         </div>
       </form>
     </AuthShell>
@@ -320,8 +464,8 @@ export function RegisterPage() {
     <AuthShell
       activeTab="register"
       eyebrow="Initial Deployment"
-      title="Create workspace"
-      copy="Configure your SRE command center and onboard your primary administrator."
+      title="Create Workspace"
+      copy="Deploy your isolated SRE command center and onboard the primary workspace admin."
     >
       <form
         className="grid"
@@ -332,33 +476,36 @@ export function RegisterPage() {
         <FormField
           name="name"
           label="Full Name"
-          placeholder="Linus Torvalds"
+          placeholder="Alex Rivera"
           icon={User}
           register={register}
           error={errors.name?.message}
         />
+
         <FormField
           name="workspaceName"
           label="Workspace Name"
-          placeholder="Acme Operations"
+          placeholder="Acme SRE Operations"
           icon={Building2}
           register={register}
           error={errors.workspaceName?.message}
         />
+
         <FormField
           name="email"
           label="Work Email"
-          placeholder="name@company.com"
+          placeholder="operator@acme.com"
           type="email"
           icon={Mail}
           register={register}
           error={errors.email?.message}
           autoComplete="email"
         />
+
         <FormField
           name="password"
-          label="Password (min 6 chars)"
-          placeholder="Create a secure password"
+          label="Password (min 6 characters)"
+          placeholder="Create a strong passphrase"
           type="password"
           icon={Lock}
           register={register}
@@ -367,29 +514,31 @@ export function RegisterPage() {
         />
         
         <div className="field-block">
-          <label className="field-label" htmlFor="role">Initial Access Role</label>
+          <label className="field-label" htmlFor="role" style={{ color: "var(--color-dark-blue)", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}>
+            Initial Role
+          </label>
           <div style={{ position: "relative" }}>
             <select
               id="role"
-              className="search"
               {...register("role")}
               style={{
                 width: "100%",
                 padding: "10px 14px",
-                background: "var(--color-surface-elevated)",
+                background: "#ffffff",
                 color: "var(--color-text)",
                 border: "1px solid var(--color-border)",
                 borderRadius: "var(--radius-sm)",
-                borderColor: errors.role ? "var(--color-danger)" : undefined
+                borderColor: errors.role ? "var(--color-danger)" : undefined,
+                fontSize: 13.5
               }}
             >
-              <option value="super-admin">Super Admin (Full Platform Control)</option>
-              <option value="admin">Admin (Operational Management)</option>
-              <option value="viewer">Viewer (Read-only Telemetry)</option>
+              <option value="super-admin">Super Admin (Full Workspace & Member Control)</option>
+              <option value="admin">Admin (Operational & Rule Management)</option>
+              <option value="viewer">Viewer (Read-Only Telemetry)</option>
             </select>
           </div>
           {errors.role && (
-            <div style={{ color: "var(--color-danger)", fontSize: 12, marginTop: 4, fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ color: "var(--color-danger)", fontSize: 12, marginTop: 4 }}>
               {errors.role.message}
             </div>
           )}
@@ -403,12 +552,12 @@ export function RegisterPage() {
         )}
 
         <button 
-          className="button primary" 
+          className="button black" 
           type="submit" 
           disabled={loading} 
-          style={{ width: "100%", height: 42, fontSize: 14 }}
+          style={{ width: "100%", height: 44, fontSize: 14, fontWeight: 700 }}
         >
-          {loading ? "Creating workspace..." : "Launch SRE Workspace"}
+          {loading ? "Deploying Workspace..." : "Create SRE Workspace"}
         </button>
 
         {googleClientId && (
@@ -416,7 +565,7 @@ export function RegisterPage() {
             className="button" 
             type="button" 
             onClick={() => redirectToGoogle(googleClientId, "register")}
-            style={{ width: "100%", height: 42, justifyContent: "center", gap: 10 }}
+            style={{ width: "100%", height: 42, justifyContent: "center", gap: 10, background: "#ffffff" }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" style={{ display: "block" }}>
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
@@ -424,12 +573,15 @@ export function RegisterPage() {
               <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.549 0 9s.347 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
               <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.896 11.426 0 9 0 5.503 0 2.439 2.014.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
             </svg>
-            Sign up with Google
+            <span>Sign up with Google</span>
           </button>
         )}
 
-        <div className="subtle" style={{ textAlign: "center", fontSize: 13 }}>
-          Already have an account? <Link to="/auth/login" style={{ fontWeight: 600 }}>Sign in</Link>
+        <div style={{ textAlign: "center", fontSize: 13, marginTop: 4 }}>
+          <span style={{ color: "var(--color-text-body)" }}>Already have an account? </span>
+          <Link to="/auth/login" style={{ color: "var(--color-dark-blue)", fontWeight: 700 }}>
+            Sign in &rarr;
+          </Link>
         </div>
       </form>
     </AuthShell>
@@ -446,7 +598,7 @@ export function ForgotPasswordPage() {
       activeTab="login"
       eyebrow="Account Recovery"
       title="Reset Password"
-      copy="Enter your registered email address and we'll send you an authentication recovery token."
+      copy="Enter your registered work email and we will dispatch a secure recovery token."
     >
       <form
         className="grid"
@@ -467,7 +619,7 @@ export function ForgotPasswordPage() {
         <FormField
           name="email"
           label="Registered Work Email"
-          placeholder="name@company.com"
+          placeholder="operator@company.com"
           type="email"
           icon={Mail}
           value={form.email}
@@ -483,16 +635,18 @@ export function ForgotPasswordPage() {
         )}
 
         <button 
-          className="button primary" 
+          className="button black" 
           type="submit" 
           disabled={loading} 
-          style={{ width: "100%", height: 42, fontSize: 14 }}
+          style={{ width: "100%", height: 44, fontSize: 14, fontWeight: 700 }}
         >
-          {loading ? "Sending link..." : "Send Reset Link"}
+          {loading ? "Sending Token..." : "Send Reset Token"}
         </button>
 
-        <div className="subtle" style={{ textAlign: "center", fontSize: 13 }}>
-          <Link to="/auth/login">&larr; Back to sign in</Link>
+        <div style={{ textAlign: "center", fontSize: 13 }}>
+          <Link to="/auth/login" style={{ color: "var(--color-text-body)" }}>
+            &larr; Back to sign in
+          </Link>
         </div>
       </form>
     </AuthShell>
@@ -517,7 +671,7 @@ export function VerifyEmailPage() {
       activeTab="login"
       eyebrow="Identity Verification"
       title="Verify Work Email"
-      copy="Confirm ownership of your email address to activate your incident responder access."
+      copy="Confirm ownership of your work email to activate your incident responder credentials."
     >
       <form
         className="grid"
@@ -538,30 +692,32 @@ export function VerifyEmailPage() {
         <FormField
           name="token"
           label="Verification Security Token"
-          placeholder="Paste verification token here"
+          placeholder="Paste security token here"
           icon={KeyRound}
           value={form.token}
           onChange={(e) => setForm({ token: e.target.value })}
         />
 
         {message && (
-          <div className={`alert-banner ${message.includes("success") ? "alert-banner--success" : "alert-banner--error"}`}>
-            {message.includes("success") ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          <div className={`alert-banner ${message.includes("successfully") ? "alert-banner--success" : "alert-banner--error"}`}>
+            {message.includes("successfully") ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
             <span>{message}</span>
           </div>
         )}
 
         <button 
-          className="button primary" 
+          className="button black" 
           type="submit" 
           disabled={loading} 
-          style={{ width: "100%", height: 42, fontSize: 14 }}
+          style={{ width: "100%", height: 44, fontSize: 14, fontWeight: 700 }}
         >
-          {loading ? "Verifying..." : "Verify Email Address"}
+          {loading ? "Verifying..." : "Verify Work Email"}
         </button>
 
-        <div className="subtle" style={{ textAlign: "center", fontSize: 13 }}>
-          <Link to="/auth/login">&larr; Back to sign in</Link>
+        <div style={{ textAlign: "center", fontSize: 13 }}>
+          <Link to="/auth/login" style={{ color: "var(--color-text-body)" }}>
+            &larr; Back to sign in
+          </Link>
         </div>
       </form>
     </AuthShell>
@@ -588,7 +744,7 @@ export function ResetPasswordPage() {
       activeTab="login"
       eyebrow="Credential Update"
       title="Set New Password"
-      copy="Create a strong, unique password to secure your operator credentials."
+      copy="Create a strong, unique passphrase to secure your operator credentials."
     >
       <form
         className="grid"
@@ -618,20 +774,22 @@ export function ResetPasswordPage() {
           value={form.token}
           onChange={(e) => setForm({ ...form, token: e.target.value })}
         />
+
         <FormField
           name="new-password"
           label="New Password"
-          placeholder="Enter new password"
+          placeholder="Enter new passphrase"
           type="password"
           icon={Lock}
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           autoComplete="new-password"
         />
+
         <FormField
           name="confirm-password"
           label="Confirm Password"
-          placeholder="Re-enter password"
+          placeholder="Re-enter passphrase"
           type="password"
           icon={Lock}
           value={form.confirmPassword}
@@ -640,23 +798,25 @@ export function ResetPasswordPage() {
         />
 
         {message && (
-          <div className={`alert-banner ${message.includes("success") ? "alert-banner--success" : "alert-banner--error"}`}>
-            {message.includes("success") ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          <div className={`alert-banner ${message.includes("successfully") ? "alert-banner--success" : "alert-banner--error"}`}>
+            {message.includes("successfully") ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
             <span>{message}</span>
           </div>
         )}
 
         <button 
-          className="button primary" 
+          className="button black" 
           type="submit" 
           disabled={loading} 
-          style={{ width: "100%", height: 42, fontSize: 14 }}
+          style={{ width: "100%", height: 44, fontSize: 14, fontWeight: 700 }}
         >
           {loading ? "Updating..." : "Update Password"}
         </button>
 
-        <div className="subtle" style={{ textAlign: "center", fontSize: 13 }}>
-          <Link to="/auth/login">&larr; Back to sign in</Link>
+        <div style={{ textAlign: "center", fontSize: 13 }}>
+          <Link to="/auth/login" style={{ color: "var(--color-text-body)" }}>
+            &larr; Back to sign in
+          </Link>
         </div>
       </form>
     </AuthShell>

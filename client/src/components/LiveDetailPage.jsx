@@ -88,9 +88,9 @@ export function LiveDetailPage({
             <Panel title={`${title} details`}>
               <div className="grid" style={{ gap: 10 }}>
                 {detailFields.map((field) => (
-                  <div key={field.key} className="panel" style={{ background: "rgba(255,255,255,0.03)", boxShadow: "none" }}>
+                  <div key={field.key} className="panel" style={{ background: "var(--color-surface-elevated)", boxShadow: "none" }}>
                     <div className="metric-label">{field.label}</div>
-                    <div>{field.render ? field.render(state.data) : formatValue(state.data[field.key])}</div>
+                    <div style={{ color: "var(--color-text)", fontWeight: 600 }}>{field.render ? field.render(state.data) : formatValue(state.data[field.key])}</div>
                   </div>
                 ))}
               </div>
@@ -105,7 +105,7 @@ export function LiveDetailPage({
                   Copy JSON
                 </button>
                 <pre 
-                  style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, maxHeight: 720, overflow: "auto", background: "var(--color-surface)", padding: 16, borderRadius: "var(--radius-md)" }}
+                  style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, maxHeight: 720, overflow: "auto", background: "var(--color-surface-elevated)", border: "1px solid var(--color-border)", padding: 16, borderRadius: "var(--radius-md)" }}
                   dangerouslySetInnerHTML={{
                     __html: (() => {
                       let json = JSON.stringify(state.data, null, 2) || "";

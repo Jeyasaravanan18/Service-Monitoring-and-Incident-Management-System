@@ -43,9 +43,6 @@ export function AIPanel({ title = "SMIMP AI Copilot", children, status = "active
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span className="ai-title">{title}</span>
           <span className="badge" style={{ 
-            background: "rgba(168, 85, 247, 0.15)", 
-            color: "#c084fc", 
-            border: "1px solid rgba(168, 85, 247, 0.3)",
             fontSize: 10,
             padding: "2px 8px"
           }}>

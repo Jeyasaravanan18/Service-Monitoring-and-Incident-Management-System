@@ -1,8 +1,8 @@
 import React, { useMemo, memo } from "react";
 
-export const TelemetryChart = memo(function TelemetryChart({ data = [], width = "100%", height = 120, color = "#38bdf8" }) {
+export const TelemetryChart = memo(function TelemetryChart({ data = [], width = "100%", height = 120, color = "#0f2b5c" }) {
   if (!data || data.length === 0) {
-    return <div className="subtle" style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>No telemetry data.</div>;
+    return <div className="subtle" style={{ height, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-soft)" }}>No telemetry data.</div>;
   }
 
   const plotData = data.length === 1 ? [data[0], data[0]] : data;
@@ -33,15 +33,15 @@ export const TelemetryChart = memo(function TelemetryChart({ data = [], width = 
       <svg viewBox="0 0 1000 100" preserveAspectRatio="none" style={{ width: "100%", height: "100%", overflow: "visible" }}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+            <stop offset="0%" stopColor={color} stopOpacity={0.16} />
             <stop offset="100%" stopColor={color} stopOpacity={0.0} />
           </linearGradient>
         </defs>
 
-        {/* Subtle grid lines */}
-        <line x1="0" y1="20" x2="1000" y2="20" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" strokeDasharray="4 4" />
-        <line x1="0" y1="50" x2="1000" y2="50" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" strokeDasharray="4 4" />
-        <line x1="0" y1="80" x2="1000" y2="80" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" strokeDasharray="4 4" />
+        {/* Minimal grid lines */}
+        <line x1="0" y1="20" x2="1000" y2="20" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+        <line x1="0" y1="50" x2="1000" y2="50" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+        <line x1="0" y1="80" x2="1000" y2="80" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
 
         {/* Area fill */}
         <path d={areaD} fill={`url(#${gradientId})`} />
@@ -55,14 +55,14 @@ export const TelemetryChart = memo(function TelemetryChart({ data = [], width = 
           const normalizedY = (val - min) / range;
           const y = 100 - paddingY - (normalizedY * (100 - paddingY * 2));
           return (
-            <circle key={i} cx={x} cy={y} r="3" fill={color} stroke="#070a12" strokeWidth="2" />
+            <circle key={i} cx={x} cy={y} r="3.5" fill={color} stroke="#ffffff" strokeWidth="2" />
           );
         })}
       </svg>
-      <div style={{ position: "absolute", top: 0, right: 0, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "var(--color-muted)" }}>
+      <div style={{ position: "absolute", top: 0, right: 0, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "var(--color-text-soft)", fontWeight: 600 }}>
         max: {Math.round(max)}ms
       </div>
-      <div style={{ position: "absolute", bottom: 0, right: 0, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "var(--color-muted)" }}>
+      <div style={{ position: "absolute", bottom: 0, right: 0, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "var(--color-text-soft)", fontWeight: 600 }}>
         min: {Math.round(min)}ms
       </div>
     </div>

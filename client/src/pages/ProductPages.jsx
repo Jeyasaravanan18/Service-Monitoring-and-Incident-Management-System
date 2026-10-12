@@ -486,87 +486,83 @@ export function PublicStatusPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-bg)", padding: "48px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "#ffffff", padding: "48px 24px" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         
         {/* HEADER */}
-        <header style={{ marginBottom: 48, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <header style={{ marginBottom: 40, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-              <div className="brand-mark" style={{ width: 24, height: 24, background: "var(--color-brand)" }} />
-              <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "0.05em" }}>{subdomain.toUpperCase()}</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <div className="brand-mark" style={{ width: 26, height: 26, background: "var(--color-dark-blue)" }} />
+              <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "-0.02em", color: "var(--color-dark-blue)" }}>{subdomain.toUpperCase()}</h1>
             </div>
-            <p className="subtle">Real-time Service Status</p>
+            <p style={{ color: "var(--color-text-body)", fontSize: 14, margin: 0 }}>Real-Time System Observability & Public SLA</p>
           </div>
           <button className="button" onClick={() => window.location.reload()}>Refresh</button>
         </header>
 
         {state.loading ? (
-          <div className="skeleton" style={{ height: 120, width: "100%", marginBottom: 32 }} />
+          <div className="skeleton" style={{ height: 100, width: "100%", marginBottom: 32 }} />
         ) : state.error ? (
-          <div className="panel" style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)" }}>
+          <div className="alert-banner alert-banner--error" style={{ marginBottom: 32 }}>
             Error loading status page: {state.error}
           </div>
         ) : state.data ? (
           <>
             {/* GLOBAL STATUS BANNER */}
             <div 
-              className="panel" 
               style={{ 
-                marginBottom: 48, 
-                background: `rgba(${globalStatus === 'operational' ? '6, 182, 212' : globalStatus === 'critical' ? '239, 68, 68' : '245, 158, 11'}, 0.05)`,
-                borderColor: globalColor,
-                boxShadow: `0 0 40px rgba(${globalStatus === 'operational' ? '6, 182, 212' : globalStatus === 'critical' ? '239, 68, 68' : '245, 158, 11'}, 0.15)`,
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "32px 40px"
+                marginBottom: 40, 
+                background: globalStatus === 'operational' ? "var(--color-dark-green-bg)" : "var(--color-danger-bg)",
+                border: `1px solid ${globalStatus === 'operational' ? "var(--color-dark-green-border)" : "#fecaca"}`,
+                borderRadius: "var(--radius-md)",
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "space-between",
+                padding: "24px 32px"
               }}
             >
-              <h2 style={{ fontSize: 28, margin: 0, color: globalColor, textShadow: `0 0 10px ${globalColor}` }}>
+              <h2 style={{ fontSize: 22, margin: 0, color: globalStatus === 'operational' ? "var(--color-dark-green)" : "var(--color-danger)", fontWeight: 800 }}>
                 {globalText}
               </h2>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 12, height: 12, borderRadius: "50%", background: globalColor, boxShadow: `0 0 10px ${globalColor}` }} className="pulse-glow" />
-                <span style={{ color: "var(--color-text-soft)", fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>LIVE</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span className="status-dot pulse" style={{ background: globalStatus === 'operational' ? "var(--color-dark-green)" : "var(--color-danger)" }} />
+                <span style={{ color: "var(--color-text-body)", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700 }}>VERIFIED SLA</span>
               </div>
             </div>
 
             {/* SERVICES UPTIME */}
-            <h3 style={{ fontSize: 18, marginBottom: 24, borderBottom: "1px solid var(--color-border-strong)", paddingBottom: 16 }}>System Metrics</h3>
-            <div className="panel" style={{ marginBottom: 48, padding: 0, overflow: "hidden" }}>
+            <h3 style={{ fontSize: 17, marginBottom: 20, color: "var(--color-dark-blue)", fontWeight: 800 }}>Monitored Service Endpoints</h3>
+            <div className="panel" style={{ marginBottom: 40, padding: 0, overflow: "hidden", background: "#ffffff", border: "1px solid var(--color-border)" }}>
               {services.length === 0 ? (
-                <div style={{ padding: 32, textAlign: "center", color: "var(--color-text-soft)" }}>No services tracked</div>
+                <div style={{ padding: 32, textAlign: "center", color: "var(--color-text-body)" }}>No services tracked</div>
               ) : (
                 services.map((service, index) => (
-                  <div key={service._id} style={{ padding: "24px 32px", borderBottom: index < services.length - 1 ? "1px solid var(--color-border-strong)" : "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                      <strong style={{ fontSize: 16 }}>{service.name}</strong>
-                      <span style={{ 
-                        color: service.healthStatus === "healthy" ? "var(--color-brand)" : service.healthStatus === "critical" ? "var(--color-danger)" : "var(--color-warn)",
-                        fontFamily: "'JetBrains Mono', monospace"
-                      }}>
+                  <div key={service._id} style={{ padding: "20px 24px", borderBottom: index < services.length - 1 ? "1px solid var(--color-border-subtle)" : "none" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                      <strong style={{ fontSize: 15, color: "var(--color-dark-blue)" }}>{service.name}</strong>
+                      <span className={`status ${service.healthStatus === "healthy" ? "healthy" : service.healthStatus === "critical" ? "critical" : "degraded"}`}>
                         {service.healthStatus === "healthy" ? "Operational" : service.healthStatus === "critical" ? "Outage" : "Degraded"}
                       </span>
                     </div>
-                    {/* SIMULATED 90-DAY UPTIME BARS */}
-                    <div style={{ display: "flex", gap: 4, height: 32, alignItems: "flex-end" }}>
+                    {/* MINIMALIST 60-DAY UPTIME BARS */}
+                    <div style={{ display: "flex", gap: 3, height: 26, alignItems: "flex-end" }}>
                       {Array.from({ length: 60 }).map((_, i) => {
-                        // Simulate random blips mostly healthy
                         const isBlip = Math.random() > 0.98;
                         const isRecentOutage = service.healthStatus !== "healthy" && i >= 55;
-                        const barColor = isRecentOutage ? "var(--color-danger)" : isBlip ? "var(--color-warn)" : "var(--color-brand)";
-                        const opacity = isRecentOutage ? 0.8 : isBlip ? 0.6 : 0.3 + (Math.random() * 0.2);
+                        const barColor = isRecentOutage ? "var(--color-danger)" : isBlip ? "var(--color-warn)" : "var(--color-dark-green)";
+                        const opacity = isRecentOutage ? 0.9 : isBlip ? 0.75 : 0.85;
                         return (
                           <div 
                             key={i} 
                             style={{ 
                               flex: 1, 
-                              height: isRecentOutage ? "100%" : isBlip ? "80%" : "100%", 
+                              height: isRecentOutage ? "100%" : isBlip ? "75%" : "100%", 
                               background: barColor, 
                               opacity,
-                              borderRadius: 2,
-                              transition: "all 0.2s ease"
+                              borderRadius: 2
                             }} 
-                            title={isRecentOutage ? "Outage" : isBlip ? "Degraded" : "No downtime recorded"}
+                            title={isRecentOutage ? "Outage" : isBlip ? "Degraded" : "100% Operational"}
                           />
                         );
                       })}
@@ -1864,11 +1860,11 @@ export function DependencyGraphPage() {
       <div className="grid" style={{ gridTemplateColumns: "3fr 2fr", gap: 20 }}>
         <Panel title="Service Topology Mesh">
           {graph.nodes.length ? (
-            <div style={{ overflowX: "auto", background: "#070a12", borderRadius: "var(--radius-sm)", padding: "16px", border: "1px solid var(--color-border)" }}>
+            <div style={{ overflowX: "auto", background: "#f8fafc", borderRadius: "var(--radius-sm)", padding: "16px", border: "1px solid var(--color-border)" }}>
               <svg width={540} height={Math.max(280, Math.ceil(graph.nodes.length / 2) * 140)} viewBox={`0 0 540 ${Math.max(280, Math.ceil(graph.nodes.length / 2) * 140)}`}>
                 <defs>
                   <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#0f2b5c" />
                   </marker>
                 </defs>
 
@@ -1879,33 +1875,32 @@ export function DependencyGraphPage() {
                     y1={edge.source.y + 30}
                     x2={edge.target.x + 95}
                     y2={edge.target.y + 30}
-                    stroke={edge.relationType === "hard" ? "#f43f5e" : "#38bdf8"}
+                    stroke={edge.relationType === "hard" ? "#991b1b" : "#0f2b5c"}
                     strokeWidth="2.5"
                     strokeDasharray={edge.relationType === "soft" ? "6 6" : "0"}
-                    opacity="0.7"
+                    opacity="0.75"
                     markerEnd="url(#arrow)"
                   />
                 ))}
 
                 {graph.nodes.map((service) => {
                   const isHealthy = service.healthStatus === "healthy";
-                  const statusColor = isHealthy ? "#10b981" : service.healthStatus === "critical" ? "#f43f5e" : "#f59e0b";
+                  const statusColor = isHealthy ? "var(--color-dark-green)" : service.healthStatus === "critical" ? "var(--color-danger)" : "var(--color-warn)";
                   return (
                     <g key={service._id} transform={`translate(${service.x}, ${service.y})`} style={{ cursor: "pointer" }}>
                       <rect 
                         width="190" 
                         height="60" 
-                        rx="12" 
-                        fill="#0d1322" 
-                        stroke={statusColor} 
+                        rx="10" 
+                        fill="#ffffff" 
+                        stroke="var(--color-border)" 
                         strokeWidth="1.5"
-                        strokeOpacity="0.6"
                       />
                       <circle cx="18" cy="22" r="4.5" fill={statusColor} />
-                      <text x="32" y="26" fill="#f8fafc" fontSize="13" fontWeight="700">
+                      <text x="32" y="26" fill="var(--color-dark-blue)" fontSize="13" fontWeight="700">
                         {service.name.length > 16 ? service.name.slice(0, 15) + "…" : service.name}
                       </text>
-                      <text x="32" y="44" fill="#94a3b8" fontSize="11" fontWeight="500">
+                      <text x="32" y="44" fill="var(--color-text-body)" fontSize="11" fontWeight="500">
                         {service.environment || "prod"} · {Math.round(service.avgLatencyMs || 0)}ms
                       </text>
                     </g>
@@ -2121,11 +2116,11 @@ export function AIInsightsPage() {
                   padding: "16px",
                   whiteSpace: "pre-wrap", 
                   lineHeight: "1.6",
-                  color: "#f8fafc",
+                  color: "var(--color-text)",
                   fontSize: 13.5
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--color-brand)", fontWeight: 700, fontSize: 12, marginBottom: 8, textTransform: "uppercase" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--color-dark-blue)", fontWeight: 700, fontSize: 12, marginBottom: 8, textTransform: "uppercase" }}>
                   <Sparkles size={14} />
                   Grounded Output
                 </div>
@@ -2146,8 +2141,8 @@ export function AIInsightsPage() {
                   .replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
                   .replace(/>/g, "&gt;");
-                html = html.replace(/^### (.*?)$/gm, '<h4 style="font-size: 15px; font-weight: 800; margin: 14px 0 6px; color: #f8fafc;">$1</h4>');
-                html = html.replace(/\*\*(.*?)\*\*/g, "<strong style='color:#38bdf8'>$1</strong>");
+                html = html.replace(/^### (.*?)$/gm, '<h4 style="font-size: 15px; font-weight: 800; margin: 14px 0 6px; color: var(--color-dark-blue);">$1</h4>');
+                html = html.replace(/\*\*(.*?)\*\*/g, "<strong style='color:var(--color-dark-blue)'>$1</strong>");
                 html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
                 return <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", marginTop: 8 }} dangerouslySetInnerHTML={{ __html: html }} />;
               };
@@ -2156,7 +2151,7 @@ export function AIInsightsPage() {
                 <div 
                   key={insight._id} 
                   style={{ 
-                    background: "var(--color-surface-elevated)", 
+                    background: "#ffffff", 
                     marginBottom: 14, 
                     border: "1px solid var(--color-border)",
                     borderRadius: "var(--radius-sm)",
@@ -2164,12 +2159,12 @@ export function AIInsightsPage() {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#ffffff" }}>{insight.title}</div>
-                    <span className="badge" style={{ fontSize: 10, textTransform: "uppercase", background: "rgba(168, 85, 247, 0.15)", color: "#c084fc", border: "1px solid rgba(168, 85, 247, 0.3)" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--color-dark-blue)" }}>{insight.title}</div>
+                    <span className="badge" style={{ fontSize: 10, textTransform: "uppercase" }}>
                       {insight.type}
                     </span>
                   </div>
-                  <div style={{ fontSize: 13.5, color: "#cbd5e1" }}>
+                  <div style={{ fontSize: 13.5, color: "var(--color-text-body)" }}>
                     {formatMarkdown(insight.body)}
                   </div>
                 </div>

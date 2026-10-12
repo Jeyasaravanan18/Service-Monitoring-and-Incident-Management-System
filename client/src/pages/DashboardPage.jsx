@@ -123,8 +123,8 @@ export function DashboardPage() {
           {/* Operational Status Ticker Banner */}
           <div style={{
             padding: "14px 20px",
-            background: allOperational ? "rgba(16, 185, 129, 0.08)" : "rgba(244, 63, 94, 0.08)",
-            border: `1px solid ${allOperational ? "rgba(16, 185, 129, 0.25)" : "rgba(244, 63, 94, 0.3)"}`,
+            background: allOperational ? "var(--color-dark-green-bg)" : "var(--color-danger-bg)",
+            border: `1px solid ${allOperational ? "var(--color-dark-green-border)" : "#fecaca"}`,
             borderRadius: "var(--radius-md)",
             display: "flex",
             alignItems: "center",
@@ -134,18 +134,18 @@ export function DashboardPage() {
             gap: 12
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span className={`status-dot ${allOperational ? "pulse" : ""}`} style={{ background: allOperational ? "#10b981" : "#f43f5e" }} />
+              <span className={`status-dot ${allOperational ? "pulse" : ""}`} style={{ background: allOperational ? "var(--color-dark-green)" : "var(--color-danger)" }} />
               <div>
-                <span style={{ fontWeight: 700, fontSize: 14, color: allOperational ? "#34d399" : "#fb7185" }}>
+                <span style={{ fontWeight: 700, fontSize: 14, color: allOperational ? "var(--color-dark-green)" : "var(--color-danger)" }}>
                   {allOperational ? "All Monitored Systems Operational" : `${criticalIncidents} Critical Incidents / ${openAlerts} Alerts Require Attention`}
                 </span>
-                <span style={{ fontSize: 12.5, color: "var(--color-muted)", marginLeft: 10 }}>
+                <span style={{ fontSize: 12.5, color: "var(--color-text-body)", marginLeft: 10 }}>
                   Real-time synthetic probes active across dev, staging & prod
                 </span>
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 16, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: "var(--color-text-soft)" }}>
+            <div style={{ display: "flex", gap: 16, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: "var(--color-text-body)", fontWeight: 600 }}>
               <span>PROBES: {serviceCount}</span>
               <span>WS: CONNECTED</span>
               <span>MTTD: &lt;45s</span>

@@ -55,26 +55,29 @@ export function CommandPalette() {
       onClick={() => setOpen(false)}
       style={{
         position: "fixed", top: 0, left: 0, width: "100%", height: "100%", 
-        background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", zIndex: 9999,
-        display: "flex", justifyContent: "center", paddingTop: "10vh"
+        background: "rgba(15, 43, 92, 0.35)", backdropFilter: "blur(6px)", zIndex: 9999,
+        display: "flex", justifyContent: "center", paddingTop: "12vh"
       }}
     >
       <div 
         className="modal-content panel" 
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: "100%", maxWidth: 600, padding: 0, height: "fit-content",
-          border: "1px solid var(--color-brand)",
-          boxShadow: "var(--shadow-glow-strong)"
+          width: "100%", maxWidth: 580, padding: 0, height: "fit-content",
+          background: "#ffffff",
+          border: "1px solid var(--color-border)",
+          boxShadow: "var(--shadow-xl)",
+          borderRadius: "var(--radius-md)",
+          overflow: "hidden"
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--color-border-strong)" }}>
-          <Search size={20} style={{ color: "var(--color-brand)", marginRight: 16 }} />
+        <div style={{ display: "flex", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--color-border)" }}>
+          <Search size={18} style={{ color: "var(--color-dark-blue)", marginRight: 14 }} />
           <input
             ref={inputRef}
             className="search"
-            style={{ width: "100%", background: "transparent", border: "none", fontSize: 18, padding: 0 }}
-            placeholder="Search commands, pages... (Try 'services')"
+            style={{ width: "100%", background: "transparent", border: "none", fontSize: 16, padding: 0, color: "var(--color-dark-blue)" }}
+            placeholder="Search console, services, incidents, alerts... (Press Esc to close)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
