@@ -52,7 +52,7 @@ const env = {
   jwtAccessTtl: process.env.JWT_ACCESS_TTL || "15m",
   jwtRefreshTtl: process.env.JWT_REFRESH_TTL || "30d",
   geminiApiKey: process.env.GEMINI_API_KEY || "",
-  geminiModel: process.env.GEMINI_MODEL || "gemini-3.5-flash",
+  geminiModel: process.env.GEMINI_MODEL || "gemini-2.0-flash",
   appName: process.env.APP_NAME || "Service Monitoring and Incident Management Platform",
   resendApiKey: process.env.RESEND_API_KEY || "",
   notificationEmailFrom: process.env.NOTIFICATION_EMAIL_FROM || "",
