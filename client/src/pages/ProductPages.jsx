@@ -217,30 +217,45 @@ const logFilters = [
 ];
 
 function MiniBarChart({ points, labels }) {
-  if (!points.length) {
-    return <div className="subtle">No time series data available yet.</div>;
+  if (!points || !points.length) {
+    return <div className="subtle" style={{ padding: "24px", textAlign: "center" }}>No time series data available yet.</div>;
   }
   const max = Math.max(...points, 1);
   return (
-    <div className="panel" style={{ background: "var(--panel-muted)" }}>
-      <div className="button-row" style={{ gap: 8, marginBottom: 8 }}>
+    <div style={{ padding: "8px 0" }}>
+      <div className="button-row" style={{ gap: 8, marginBottom: 16 }}>
         {labels.map((label, index) => (
-          <span key={label} className="badge">
-            {label}: {points[index]}
+          <span key={label} className="badge" style={{ fontSize: 11, padding: "3px 8px" }}>
+            {label}: <strong style={{ color: "var(--color-brand)", marginLeft: 4 }}>{points[index]}</strong>
           </span>
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))`, gap: 10, alignItems: "end", minHeight: 140 }}>
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))`, 
+        gap: 12, 
+        alignItems: "end", 
+        minHeight: 140,
+        padding: "12px 16px",
+        background: "var(--color-surface-elevated)",
+        borderRadius: "var(--radius-sm)",
+        border: "1px solid var(--color-border)"
+      }}>
         {points.map((point, index) => (
-          <div key={`${labels[index]}-${index}`} style={{ display: "grid", gap: 8 }}>
+          <div key={`${labels[index]}-${index}`} style={{ display: "grid", gap: 8, textAlign: "center" }}>
+            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "var(--color-brand)" }}>
+              {point}
+            </div>
             <div
               style={{
-                height: `${Math.max(18, (point / max) * 120)}px`,
-                borderRadius: 14,
-                background: "var(--green)",
+                height: `${Math.max(16, (point / max) * 110)}px`,
+                borderRadius: "6px 6px 2px 2px",
+                background: "linear-gradient(180deg, #38bdf8 0%, #6366f1 100%)",
+                boxShadow: "0 0 12px rgba(56, 189, 248, 0.25)",
+                transition: "all 0.3s ease"
               }}
             />
-            <div className="subtle" style={{ textAlign: "center", fontSize: 12 }}>
+            <div style={{ fontSize: 11, color: "var(--color-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {labels[index]}
             </div>
           </div>
@@ -1284,44 +1299,118 @@ export function AlertDetailPage() {
     <>
       <Topbar />
       <PageHeader
-        title="Alert detail"
-        copy="Review alert state, severity, and incident linkage."
+        title="Alert Investigation"
+        copy="Detailed alert context, deduplication metadata, severity level, and correlated incident timeline."
+        badge={state.data ? `${state.data.severity?.toUpperCase()} · ${state.data.status?.toUpperCase()}` : undefined}
         action={
           <div className="button-row">
-            <button className="button" onClick={() => updateStatus("acknowledged")}>Acknowledge</button>
-            <button className="button" onClick={() => updateStatus("resolved")}>Resolve</button>
-            <button className="button" onClick={refresh}>Refresh</button>
+            <button className="button" onClick={() => updateStatus("acknowledged")}>
+              Acknowledge Alert
+            </button>
+            <button className="button primary" onClick={() => updateStatus("resolved")}>
+              Mark Resolved
+            </button>
+            <button className="button" onClick={refresh}>
+              Refresh
+            </button>
           </div>
         }
       />
-      {state.loading ? <Panel title="Loading">Loading alert...</Panel> : null}
-      {state.error ? <Panel title="Error">{state.error}</Panel> : null}
+      {state.loading ? (
+        <Panel>
+          <div style={{ padding: "40px", textAlign: "center", color: "var(--color-muted)" }}>
+            Loading alert telemetry data...
+          </div>
+        </Panel>
+      ) : null}
+      {state.error ? (
+        <div className="alert-banner alert-banner--error">{state.error}</div>
+      ) : null}
       {state.data ? (
         <>
+          <div className="grid cols-4" style={{ marginBottom: 20 }}>
+            <MetricCard label="Severity" value={state.data.severity?.toUpperCase()} variant={state.data.severity === "critical" ? "danger" : "warn"} />
+            <MetricCard label="Status" value={state.data.status?.toUpperCase()} variant={state.data.status === "resolved" ? "default" : "warn"} />
+            <MetricCard label="Trigger Count" value="1" trend="Automated synthetic rule" />
+            <MetricCard label="Dedupe Key" value={state.data.dedupeKey ? state.data.dedupeKey.slice(0, 8) : "None"} trend="Fingerprint hash" />
+          </div>
+
           <div className="grid cols-2">
-            <Panel title="Alert summary">
-              <div className="grid" style={{ gap: 10 }}>
-                <div>Title: {state.data.title}</div>
-                <div>Status: {state.data.status}</div>
-                <div>Severity: {state.data.severity}</div>
-                <div>Summary: {state.data.summary || "-"}</div>
-                <div>Dedupe key: {state.data.dedupeKey || "-"}</div>
-                <div>Incident: {state.data.incident?.title || "Not linked"}</div>
+            <Panel title="Alert Overview">
+              <div className="grid" style={{ gap: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "var(--color-surface-elevated)", borderRadius: "var(--radius-sm)" }}>
+                  <span style={{ color: "var(--color-muted)", fontSize: 13 }}>Alert Title</span>
+                  <strong style={{ fontSize: 14 }}>{state.data.title}</strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "var(--color-surface-elevated)", borderRadius: "var(--radius-sm)" }}>
+                  <span style={{ color: "var(--color-muted)", fontSize: 13 }}>Summary Message</span>
+                  <span style={{ fontSize: 13, textAlign: "right" }}>{state.data.summary || "No extended summary."}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "var(--color-surface-elevated)", borderRadius: "var(--radius-sm)" }}>
+                  <span style={{ color: "var(--color-muted)", fontSize: 13 }}>Linked Incident</span>
+                  <span>
+                    {state.data.incident ? (
+                      <Link to={`/app/incidents/${state.data.incident._id}`} style={{ fontWeight: 600 }}>
+                        {state.data.incident.title} &rarr;
+                      </Link>
+                    ) : (
+                      <span className="badge">Standalone / Not Linked</span>
+                    )}
+                  </span>
+                </div>
               </div>
             </Panel>
-            <Panel title="Meta">
-              <pre style={{ whiteSpace: "pre-wrap", margin: 0, color: "var(--muted)" }}>{JSON.stringify(state.data.meta || {}, null, 2)}</pre>
+
+            <Panel title="Telemetry Metadata">
+              <div style={{
+                background: "#070a12",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-sm)",
+                padding: "16px",
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 12,
+                color: "var(--color-brand)",
+                maxHeight: 260,
+                overflowY: "auto"
+              }}>
+                <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                  {JSON.stringify(state.data.meta || {}, null, 2)}
+                </pre>
+              </div>
             </Panel>
           </div>
-          <div style={{ marginTop: 16 }}>
-            <Panel title="Timeline">
+
+          <div style={{ marginTop: 20 }}>
+            <Panel title="Alert Event Timeline">
               <div className="grid" style={{ gap: 10 }}>
-                {timeline.map((entry) => (
-                  <div key={`${entry.type}-${entry.at}`} className="panel" style={{ background: "rgba(255,255,255,0.03)" }}>
-                    <div>{entry.label}</div>
-                    <div className="subtle">{entry.type} - {new Date(entry.at).toLocaleString()}</div>
+                {timeline.length ? (
+                  timeline.map((entry, idx) => (
+                    <div 
+                      key={`${entry.type}-${entry.at}-${idx}`} 
+                      style={{ 
+                        padding: "12px 18px", 
+                        background: "var(--color-surface-elevated)", 
+                        border: "1px solid var(--color-border)",
+                        borderRadius: "var(--radius-sm)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13.5 }}>{entry.label}</div>
+                        <div style={{ fontSize: 11.5, color: "var(--color-muted)", marginTop: 2 }}>{entry.type}</div>
+                      </div>
+                      <span style={{ fontSize: 12, color: "var(--color-muted)", fontFamily: "'JetBrains Mono', monospace" }}>
+                        {new Date(entry.at).toLocaleString()}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: "24px", textAlign: "center", color: "var(--color-muted)" }}>
+                    No prior timeline steps logged.
                   </div>
-                ))}
+                )}
               </div>
             </Panel>
           </div>
@@ -1374,99 +1463,220 @@ export function IncidentDetailPage() {
     }
   };
 
+  const isResolved = state.data?.status === "resolved";
+
   return (
     <>
       <Topbar />
       <PageHeader
-        title="Incident detail"
-        copy="Track lifecycle, responder notes, AI draft generation, and correlated alerts."
+        title="Incident War Room"
+        copy="Live incident response channel, timeline stream, correlated telemetry evidence, and AI postmortem generator."
+        badge={state.data ? `${state.data.severity?.toUpperCase()} · ${state.data.status?.toUpperCase()}` : undefined}
         action={
           <div className="button-row">
-            <button className="button" onClick={resolve}>Resolve</button>
+            {!isResolved ? (
+              <button className="button primary" onClick={resolve}>
+                Mark Incident Resolved
+              </button>
+            ) : (
+              <span className="status healthy">Resolved</span>
+            )}
             <button className="button" onClick={generatePostmortem} disabled={generatingPostmortem}>
-              {generatingPostmortem ? "Generating..." : "Generate postmortem"}
+              {generatingPostmortem ? "Synthesizing AI Report..." : "Generate AI Postmortem"}
             </button>
-            <button className="button" onClick={refresh}>Refresh</button>
+            <button className="button" onClick={refresh}>
+              Refresh
+            </button>
           </div>
         }
       />
-      {state.loading ? <Panel title="Loading">Loading incident...</Panel> : null}
-      {state.error ? <Panel title="Error">{state.error}</Panel> : null}
+      {state.loading ? (
+        <Panel>
+          <div style={{ padding: "40px", textAlign: "center", color: "var(--color-muted)" }}>
+            Loading incident response room...
+          </div>
+        </Panel>
+      ) : null}
+      {state.error ? (
+        <div className="alert-banner alert-banner--error">{state.error}</div>
+      ) : null}
       {state.data ? (
         <>
+          {/* AI Postmortem or Root-Cause Summary */}
           {state.data.postmortems && state.data.postmortems.length > 0 ? (
-            <AIPanel title={`SMIMP AI - Postmortem Analysis`} status="active">
-              {state.data.postmortems[0].body}
-            </AIPanel>
+            <div style={{ marginBottom: 20 }}>
+              <AIPanel title="SMIMP AI Grounded Postmortem Analysis" status="active">
+                {state.data.postmortems[0].body}
+              </AIPanel>
+            </div>
           ) : (
-            <AIPanel title={`SMIMP AI - Root Cause Diagnostic`} status={generatingPostmortem ? "analyzing" : "active"}>
-              {generatingPostmortem 
-                ? "Synthesizing logs and alerts..." 
-                : "No AI postmortem has been generated for this incident yet. Click 'Generate postmortem' to synthesize logs and alerts into a report."}
-            </AIPanel>
+            <div style={{ marginBottom: 20 }}>
+              <AIPanel title="SMIMP AI Root Cause Diagnostic" status={generatingPostmortem ? "analyzing" : "active"}>
+                {generatingPostmortem 
+                  ? "Correlating distributed logs, deployment diffs, and health metrics to draft root-cause narrative..." 
+                  : "No incident postmortem published yet. Click 'Generate AI Postmortem' to synthesize evidence into an SRE postmortem."}
+              </AIPanel>
+            </div>
           )}
-          <div className="grid cols-4" style={{ marginBottom: 16 }}>
-            <MetricCard label="Severity" value={state.data.severity} trend={state.data.status} />
-            <MetricCard label="Alerts" value={String((state.data.alerts || []).length)} trend="Correlated alerts" />
-            <MetricCard label="Logs" value={String((state.data.logs || []).length)} trend="Recent logs" />
-            <MetricCard label="Notes" value={String((state.data.notes || []).length)} trend="Responder notes" />
+
+          <div className="grid cols-4" style={{ marginBottom: 20 }}>
+            <MetricCard 
+              label="Severity" 
+              value={state.data.severity?.toUpperCase()} 
+              variant={state.data.severity === "critical" ? "danger" : "warn"} 
+            />
+            <MetricCard 
+              label="Correlated Alerts" 
+              value={String((state.data.alerts || []).length)} 
+              trend="Triggered alarms" 
+            />
+            <MetricCard 
+              label="Telemetry Logs" 
+              value={String((state.data.logs || []).length)} 
+              trend="Error events captured" 
+            />
+            <MetricCard 
+              label="Responder Notes" 
+              value={String((state.data.notes || []).length)} 
+              trend="War-room updates" 
+            />
           </div>
+
           <div className="grid cols-2">
-            <Panel title="Incident summary">
-              <div className="grid" style={{ gap: 10 }}>
-                <div>Title: {state.data.title}</div>
-                <div>Status: {state.data.status}</div>
-                <div>Severity: {state.data.severity}</div>
-                <div>Root cause tag: {state.data.rootCauseTag || "-"}</div>
-                <div>Summary: {state.data.summary || "-"}</div>
-              </div>
-            </Panel>
-            <Panel title="Add note">
-              <textarea className="search" rows={6} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Write a response note..." />
-              <div className="button-row" style={{ marginTop: 12 }}>
-                <button className="button primary" onClick={addNote}>Add note</button>
-              </div>
-            </Panel>
-          </div>
-          <div className="grid cols-2" style={{ marginTop: 16 }}>
-            <Panel title="Related alerts">
-              {(state.data.alerts || []).length ? (
-                <div className="grid" style={{ gap: 10 }}>
-                  {state.data.alerts.map((alert) => (
-                    <div key={alert._id} className="panel" style={{ background: "rgba(255,255,255,0.03)" }}>
-                      <Link to={`/app/alerts/${alert._id}`}>{alert.title}</Link>
-                      <div className="subtle">{alert.severity} - {alert.status}</div>
-                    </div>
-                  ))}
+            <Panel title="Incident Context">
+              <div className="grid" style={{ gap: 12 }}>
+                <div style={{ padding: "10px 14px", background: "var(--color-surface-elevated)", borderRadius: "var(--radius-sm)" }}>
+                  <div style={{ color: "var(--color-muted)", fontSize: 12 }}>Incident Title</div>
+                  <strong style={{ fontSize: 15, marginTop: 4, display: "block" }}>{state.data.title}</strong>
                 </div>
-              ) : (
-                <div className="subtle">No related alerts.</div>
-              )}
-            </Panel>
-            <Panel title="Logs">
-              {(state.data.logs || []).length ? (
-                <div className="grid" style={{ gap: 10 }}>
-                  {state.data.logs.slice(0, 5).map((log) => (
-                    <div key={log._id} className="panel" style={{ background: "rgba(255,255,255,0.03)" }}>
-                      <div>{log.message}</div>
-                      <div className="subtle">{log.severity} - {new Date(log.occurredAt).toLocaleString()}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="subtle">No correlated logs.</div>
-              )}
-            </Panel>
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <Panel title="Timeline">
-              <div className="grid" style={{ gap: 10 }}>
-                {timeline.map((entry) => (
-                  <div key={`${entry.type}-${entry.at}`} className="panel" style={{ background: "rgba(255,255,255,0.03)" }}>
-                    <div>{entry.label}</div>
-                    <div className="subtle">{entry.type} - {new Date(entry.at).toLocaleString()}</div>
+                <div style={{ padding: "10px 14px", background: "var(--color-surface-elevated)", borderRadius: "var(--radius-sm)" }}>
+                  <div style={{ color: "var(--color-muted)", fontSize: 12 }}>Impact Summary</div>
+                  <div style={{ fontSize: 13.5, marginTop: 4, lineHeight: 1.5 }}>
+                    {state.data.summary || "No initial impact summary specified."}
                   </div>
-                ))}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "var(--color-surface-elevated)", borderRadius: "var(--radius-sm)" }}>
+                  <span style={{ color: "var(--color-muted)", fontSize: 13 }}>Root Cause Tag</span>
+                  <span className="badge" style={{ fontSize: 12 }}>{state.data.rootCauseTag || "Under Investigation"}</span>
+                </div>
+              </div>
+            </Panel>
+
+            <Panel title="Responder Notes & Updates">
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <textarea 
+                  className="search" 
+                  rows={4} 
+                  value={note} 
+                  onChange={(event) => setNote(event.target.value)} 
+                  placeholder="Record an operational action, mitigation step, or responder note..." 
+                  style={{ maxWidth: "100%", borderRadius: "var(--radius-sm)" }}
+                />
+                <button className="button primary" onClick={addNote} style={{ alignSelf: "flex-end" }}>
+                  Publish Responder Note
+                </button>
+              </div>
+
+              {state.data.notes && state.data.notes.length > 0 && (
+                <div style={{ marginTop: 16, borderTop: "1px solid var(--color-border)", paddingTop: 12 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--color-muted)", textTransform: "uppercase", marginBottom: 8 }}>
+                    Prior Notes ({state.data.notes.length})
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 180, overflowY: "auto" }}>
+                    {state.data.notes.map((n, i) => (
+                      <div key={i} style={{ padding: "8px 12px", background: "var(--color-surface-elevated)", borderRadius: "var(--radius-sm)", fontSize: 13 }}>
+                        <div>{n.body || n.content || JSON.stringify(n)}</div>
+                        <div style={{ fontSize: 11, color: "var(--color-muted)", marginTop: 4 }}>
+                          {n.createdAt ? new Date(n.createdAt).toLocaleString() : "Just now"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Panel>
+          </div>
+
+          <div className="grid cols-2" style={{ marginTop: 20 }}>
+            <Panel title={`Related Alerts (${(state.data.alerts || []).length})`}>
+              {(state.data.alerts || []).length ? (
+                <div className="grid" style={{ gap: 8 }}>
+                  {state.data.alerts.map((alert) => (
+                    <div key={alert._id} className="alert-row">
+                      <div className="alert-row__content">
+                        <Link to={`/app/alerts/${alert._id}`} style={{ fontWeight: 600 }}>
+                          {alert.title}
+                        </Link>
+                      </div>
+                      <span className={`status-badge status-badge--${alert.severity === "critical" ? "critical" : "high"}`}>
+                        {alert.severity}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: "24px", textAlign: "center", color: "var(--color-muted)" }}>
+                  No alerts correlated with this incident.
+                </div>
+              )}
+            </Panel>
+
+            <Panel title={`Telemetry Logs (${(state.data.logs || []).length})`}>
+              {(state.data.logs || []).length ? (
+                <div className="grid" style={{ gap: 8 }}>
+                  {state.data.logs.slice(0, 5).map((log) => (
+                    <div key={log._id} style={{ padding: "10px 14px", background: "var(--color-surface-elevated)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5, color: "#f8fafc" }}>
+                        {log.message}
+                      </div>
+                      <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 11, color: "var(--color-muted)" }}>
+                        <span style={{ color: log.severity === "error" || log.severity === "critical" ? "var(--color-danger)" : "var(--color-brand)" }}>
+                          {(log.severity || "INFO").toUpperCase()}
+                        </span>
+                        <span>{new Date(log.occurredAt).toLocaleTimeString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: "24px", textAlign: "center", color: "var(--color-muted)" }}>
+                  No correlated logs discovered.
+                </div>
+              )}
+            </Panel>
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <Panel title="Incident Chronology & Timeline">
+              <div className="grid" style={{ gap: 10 }}>
+                {timeline.length ? (
+                  timeline.map((entry, idx) => (
+                    <div 
+                      key={`${entry.type}-${entry.at}-${idx}`} 
+                      style={{ 
+                        padding: "12px 18px", 
+                        background: "var(--color-surface-elevated)", 
+                        border: "1px solid var(--color-border)",
+                        borderRadius: "var(--radius-sm)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13.5 }}>{entry.label}</div>
+                        <div style={{ fontSize: 11.5, color: "var(--color-muted)", marginTop: 2 }}>{entry.type}</div>
+                      </div>
+                      <span style={{ fontSize: 12, color: "var(--color-muted)", fontFamily: "'JetBrains Mono', monospace" }}>
+                        {new Date(entry.at).toLocaleString()}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: "24px", textAlign: "center", color: "var(--color-muted)" }}>
+                    No prior timeline items logged.
+                  </div>
+                )}
               </div>
             </Panel>
           </div>
@@ -1526,24 +1736,38 @@ export function AnalyticsPage() {
           <MiniBarChart points={alertVolume} labels={["Open", "Ack", "Resolved", "Escalated"]} />
         </Panel>
       </div>
-      <div className="grid cols-2" style={{ marginTop: 16 }}>
-        <Panel title="Recent incidents">
-          {(overview.incidents || []).slice(0, 5).map((incident) => (
-            <div key={incident._id} className="panel" style={{ background: "var(--panel-muted)", marginBottom: 10 }}>
-              <Link to={`/app/incidents/${incident._id}`}>{incident.title}</Link>
-              <div className="subtle">{incident.status} · {incident.severity}</div>
-            </div>
-          ))}
-          {!overview.incidents?.length ? <div className="subtle">No incident data in this workspace yet.</div> : null}
+      <div className="grid cols-2" style={{ marginTop: 20 }}>
+        <Panel title="Recent Critical Incidents">
+          <div className="grid" style={{ gap: 10 }}>
+            {(overview.incidents || []).slice(0, 5).map((incident) => (
+              <div key={incident._id} className="incident-row">
+                <div className="incident-row__title">
+                  <Link to={`/app/incidents/${incident._id}`}>{incident.title}</Link>
+                </div>
+                <div className="incident-row__meta">
+                  <span className={`status-badge status-badge--${incident.severity}`}>{incident.severity}</span>
+                  <span className="badge" style={{ padding: "2px 8px", fontSize: 11 }}>{incident.status}</span>
+                </div>
+              </div>
+            ))}
+            {!overview.incidents?.length ? <div className="subtle" style={{ padding: 16, textAlign: "center" }}>No incident data in this workspace yet.</div> : null}
+          </div>
         </Panel>
-        <Panel title="Recent alerts">
-          {(overview.alerts || []).slice(0, 5).map((alert) => (
-            <div key={alert._id} className="panel" style={{ background: "var(--panel-muted)", marginBottom: 10 }}>
-              <Link to={`/app/alerts/${alert._id}`}>{alert.title}</Link>
-              <div className="subtle">{alert.status} · {alert.severity}</div>
-            </div>
-          ))}
-          {!overview.alerts?.length ? <div className="subtle">No alert data in this workspace yet.</div> : null}
+        <Panel title="Recent Active Alerts">
+          <div className="grid" style={{ gap: 10 }}>
+            {(overview.alerts || []).slice(0, 5).map((alert) => (
+              <div key={alert._id} className="alert-row">
+                <div className="alert-row__content">
+                  <Link to={`/app/alerts/${alert._id}`}>{alert.title}</Link>
+                </div>
+                <div className="incident-row__meta">
+                  <span className={`status-badge status-badge--${alert.severity === "critical" ? "critical" : "high"}`}>{alert.severity}</span>
+                  <span className="badge" style={{ padding: "2px 8px", fontSize: 11 }}>{alert.status}</span>
+                </div>
+              </div>
+            ))}
+            {!overview.alerts?.length ? <div className="subtle" style={{ padding: 16, textAlign: "center" }}>No alert data in this workspace yet.</div> : null}
+          </div>
         </Panel>
       </div>
     </>
@@ -1574,8 +1798,8 @@ export function DependencyGraphPage() {
   const graph = useMemo(() => {
     const nodes = services.map((service, index) => ({
       ...service,
-      x: 30 + (index % 2) * 230,
-      y: 40 + Math.floor(index / 2) * 120,
+      x: 30 + (index % 2) * 250,
+      y: 40 + Math.floor(index / 2) * 130,
     }));
     const nodeMap = new Map(nodes.map((node) => [String(node._id), node]));
     const edges = dependencies
@@ -1632,40 +1856,67 @@ export function DependencyGraphPage() {
   return (
     <>
       <Topbar />
-      <PageHeader title="Dependency graph" copy="A live topology map of service relationships and dependency edges." />
-      <div className="grid" style={{ gridTemplateColumns: "3fr 2fr", gap: 16 }}>
-        <Panel title="Topology map">
+      <PageHeader 
+        title="Dependency Topology Graph" 
+        copy="Live service dependency map, architectural blast radiuses, and hard/soft upstream relationship tracking."
+        badge={`${dependencies.length} Edge Links`}
+      />
+      <div className="grid" style={{ gridTemplateColumns: "3fr 2fr", gap: 20 }}>
+        <Panel title="Service Topology Mesh">
           {graph.nodes.length ? (
-            <div style={{ overflowX: "auto" }}>
-              <svg width={500} height={Math.max(260, Math.ceil(graph.nodes.length / 2) * 130)} viewBox={`0 0 500 ${Math.max(260, Math.ceil(graph.nodes.length / 2) * 130)}`}>
+            <div style={{ overflowX: "auto", background: "#070a12", borderRadius: "var(--radius-sm)", padding: "16px", border: "1px solid var(--color-border)" }}>
+              <svg width={540} height={Math.max(280, Math.ceil(graph.nodes.length / 2) * 140)} viewBox={`0 0 540 ${Math.max(280, Math.ceil(graph.nodes.length / 2) * 140)}`}>
+                <defs>
+                  <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
+                  </marker>
+                </defs>
+
                 {graph.edges.map((edge, index) => (
                   <line
                     key={`${edge.source._id}-${edge.target._id}-${index}`}
-                    x1={edge.source.x + 90}
-                    y1={edge.source.y + 28}
-                    x2={edge.target.x + 90}
-                    y2={edge.target.y + 28}
-                    stroke="var(--color-brand)"
-                    strokeWidth="2"
+                    x1={edge.source.x + 95}
+                    y1={edge.source.y + 30}
+                    x2={edge.target.x + 95}
+                    y2={edge.target.y + 30}
+                    stroke={edge.relationType === "hard" ? "#f43f5e" : "#38bdf8"}
+                    strokeWidth="2.5"
                     strokeDasharray={edge.relationType === "soft" ? "6 6" : "0"}
-                    opacity="0.4"
+                    opacity="0.7"
+                    markerEnd="url(#arrow)"
                   />
                 ))}
-                {graph.nodes.map((service) => (
-                  <g key={service._id} transform={`translate(${service.x}, ${service.y})`}>
-                    <rect width="180" height="56" rx="14" fill="var(--color-surface)" stroke="var(--color-border-strong)" strokeWidth="1.5" />
-                    <text x="14" y="24" fill="var(--color-text)" fontSize="13" fontWeight="700">
-                      {service.name}
-                    </text>
-                    <text x="14" y="42" fill="var(--color-text-soft)" fontSize="10" fontWeight="600">
-                      {service.environment} · {Math.round(service.avgLatencyMs || 0)}ms
-                    </text>
-                  </g>
-                ))}
+
+                {graph.nodes.map((service) => {
+                  const isHealthy = service.healthStatus === "healthy";
+                  const statusColor = isHealthy ? "#10b981" : service.healthStatus === "critical" ? "#f43f5e" : "#f59e0b";
+                  return (
+                    <g key={service._id} transform={`translate(${service.x}, ${service.y})`} style={{ cursor: "pointer" }}>
+                      <rect 
+                        width="190" 
+                        height="60" 
+                        rx="12" 
+                        fill="#0d1322" 
+                        stroke={statusColor} 
+                        strokeWidth="1.5"
+                        strokeOpacity="0.6"
+                      />
+                      <circle cx="18" cy="22" r="4.5" fill={statusColor} />
+                      <text x="32" y="26" fill="#f8fafc" fontSize="13" fontWeight="700">
+                        {service.name.length > 16 ? service.name.slice(0, 15) + "…" : service.name}
+                      </text>
+                      <text x="32" y="44" fill="#94a3b8" fontSize="11" fontWeight="500">
+                        {service.environment || "prod"} · {Math.round(service.avgLatencyMs || 0)}ms
+                      </text>
+                    </g>
+                  );
+                })}
               </svg>
             </div>
           ) : (
-            <div className="subtle">No services or dependency edges have been created yet.</div>
+            <div className="subtle" style={{ padding: 40, textAlign: "center" }}>
+              No services or dependency edges have been registered yet.
+            </div>
           )}
         </Panel>
 
@@ -1764,6 +2015,7 @@ export function AIInsightsPage() {
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [message, setMessage] = useState("");
+  const [running, setRunning] = useState(false);
 
   const refresh = () => {
     setState((current) => ({ ...current, loading: true, error: "" }));
@@ -1784,6 +2036,7 @@ export function AIInsightsPage() {
 
   const runInsight = async (type) => {
     setMessage("");
+    setRunning(true);
     try {
       if (type === "incident" && selectedIncidentId) {
         const response = await apiGet(`/ai/incident/${selectedIncidentId}`);
@@ -1792,12 +2045,14 @@ export function AIInsightsPage() {
         const response = await apiGet(`/ai/service/${selectedServiceId}`);
         setMessage(response.data?.summary || response.data?.caution || "Service insight generated.");
       } else {
-        setMessage("Pick an item to generate an insight.");
+        setMessage("Please select a target incident or service to generate a grounded insight.");
         return;
       }
       refresh();
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setRunning(false);
     }
   };
 
@@ -1805,73 +2060,126 @@ export function AIInsightsPage() {
     <>
       <Topbar />
       <PageHeader
-        title="AI insights"
-        copy="Generated summaries and grounded recommendations from incidents and service telemetry."
-        action={<button className="button" onClick={refresh}>Refresh</button>}
+        title="AI SRE Copilot Studio"
+        copy="Grounded incident syntheses, telemetry anomaly detection, and operational intelligence derived from live service metrics."
+        badge="Gemini 2.0 Operational Reasoning"
+        action={
+          <button className="button" onClick={refresh}>
+            <RefreshCw size={14} className={state.loading ? "spin" : ""} />
+            <span>Refresh Feed</span>
+          </button>
+        }
       />
       <div className="grid cols-2">
-        <Panel title="Generate insight">
-          <div className="grid" style={{ gap: 12 }}>
+        <Panel title="Generate Operational Insight">
+          <div className="grid" style={{ gap: 16 }}>
             <label className="field-block">
-              <span className="field-label">Incident</span>
-              <select className="search" value={selectedIncidentId} onChange={(event) => setSelectedIncidentId(event.target.value)}>
-                <option value="">Select incident</option>
+              <span className="field-label">Target Incident War Room</span>
+              <select className="search" style={{ maxWidth: "100%" }} value={selectedIncidentId} onChange={(event) => setSelectedIncidentId(event.target.value)}>
+                <option value="">Select an active or historical incident...</option>
                 {context.incidents.map((incident) => (
-                  <option key={incident._id} value={incident._id}>{incident.title}</option>
+                  <option key={incident._id} value={incident._id}>{incident.title} ({incident.severity})</option>
                 ))}
               </select>
             </label>
+
             <label className="field-block">
-              <span className="field-label">Service</span>
-              <select className="search" value={selectedServiceId} onChange={(event) => setSelectedServiceId(event.target.value)}>
-                <option value="">Select service</option>
+              <span className="field-label">Target Monitored Endpoint</span>
+              <select className="search" style={{ maxWidth: "100%" }} value={selectedServiceId} onChange={(event) => setSelectedServiceId(event.target.value)}>
+                <option value="">Select a monitored service...</option>
                 {context.services.map((service) => (
-                  <option key={service._id} value={service._id}>{service.name}</option>
+                  <option key={service._id} value={service._id}>{service.name} ({service.environment})</option>
                 ))}
               </select>
             </label>
+
             <div className="button-row">
-              <button className="button primary" onClick={() => runInsight("incident")} type="button">Generate incident summary</button>
-              <button className="button" onClick={() => runInsight("service")} type="button">Generate service trend</button>
+              <button 
+                className="button primary" 
+                onClick={() => runInsight("incident")} 
+                type="button"
+                disabled={running}
+              >
+                {running ? "Synthesizing..." : "Synthesize Incident Postmortem"}
+              </button>
+              <button 
+                className="button" 
+                onClick={() => runInsight("service")} 
+                type="button"
+                disabled={running}
+              >
+                Forecast Service Anomaly
+              </button>
             </div>
-            {message ? <div className="subtle" style={{ whiteSpace: "pre-wrap", marginTop: 12, lineHeight: "1.6" }}>{message}</div> : null}
+
+            {message ? (
+              <div 
+                style={{ 
+                  background: "var(--color-surface-elevated)", 
+                  border: "1px solid var(--color-brand)", 
+                  borderRadius: "var(--radius-sm)", 
+                  padding: "16px",
+                  whiteSpace: "pre-wrap", 
+                  lineHeight: "1.6",
+                  color: "#f8fafc",
+                  fontSize: 13.5
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--color-brand)", fontWeight: 700, fontSize: 12, marginBottom: 8, textTransform: "uppercase" }}>
+                  <Sparkles size={14} />
+                  Grounded Output
+                </div>
+                {message}
+              </div>
+            ) : null}
           </div>
         </Panel>
-        <Panel title="Recent insights">
-          <div style={{ maxHeight: "580px", overflowY: "auto", paddingRight: "8px" }}>
-            {state.loading ? <div className="subtle">Loading insights...</div> : null}
-            {state.error ? <div className="subtle">{state.error}</div> : null}
+
+        <Panel title="Published AI Operational Insights">
+          <div style={{ maxHeight: "580px", overflowY: "auto", paddingRight: "4px" }}>
+            {state.loading ? <div className="subtle" style={{ padding: 20, textAlign: "center" }}>Retrieving insight logs...</div> : null}
+            {state.error ? <div className="alert-banner alert-banner--error">{state.error}</div> : null}
             {(state.data || []).map((insight) => {
               const formatMarkdown = (text) => {
                 if (!text) return "";
-                // Escape basic HTML to prevent XSS
                 let html = text
                   .replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
                   .replace(/>/g, "&gt;");
-                // Match headers (### Title)
-                html = html.replace(/^### (.*?)$/gm, '<h4 style="font-size: 16px; font-weight: 800; margin: 18px 0 8px; color: var(--color-text);">$1</h4>');
-                // Match bold text (**bold**)
-                html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-                // Match italic text (*italic*)
+                html = html.replace(/^### (.*?)$/gm, '<h4 style="font-size: 15px; font-weight: 800; margin: 14px 0 6px; color: #f8fafc;">$1</h4>');
+                html = html.replace(/\*\*(.*?)\*\*/g, "<strong style='color:#38bdf8'>$1</strong>");
                 html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
                 return <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", marginTop: 8 }} dangerouslySetInnerHTML={{ __html: html }} />;
               };
 
               return (
-                <div key={insight._id} className="panel" style={{ background: "var(--color-surface-alt)", marginBottom: 16, border: "1px solid var(--color-border)" }}>
-                  <div style={{ fontSize: 18, fontWeight: 800 }}>{insight.title}</div>
-                  <div className="subtle" style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 2 }}>{insight.type}</div>
-                  {formatMarkdown(insight.body)}
+                <div 
+                  key={insight._id} 
+                  style={{ 
+                    background: "var(--color-surface-elevated)", 
+                    marginBottom: 14, 
+                    border: "1px solid var(--color-border)",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "16px 20px" 
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#ffffff" }}>{insight.title}</div>
+                    <span className="badge" style={{ fontSize: 10, textTransform: "uppercase", background: "rgba(168, 85, 247, 0.15)", color: "#c084fc", border: "1px solid rgba(168, 85, 247, 0.3)" }}>
+                      {insight.type}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 13.5, color: "#cbd5e1" }}>
+                    {formatMarkdown(insight.body)}
+                  </div>
                 </div>
               );
             })}
-            {!state.loading && !state.data.length ? <div className="subtle">No AI insights generated yet.</div> : null}
-          </div>
-        </Panel>
-        <Panel title="Positioning">
-          <div className="subtle" style={{ lineHeight: "1.6" }}>
-            The AI layer stays grounded in incident, alert, log, and service records. When evidence is thin, the summary stays cautious instead of inventing a story.
+            {!state.loading && !state.data.length ? (
+              <div className="subtle" style={{ padding: "40px", textAlign: "center" }}>
+                No AI operational insights generated yet.
+              </div>
+            ) : null}
           </div>
         </Panel>
       </div>

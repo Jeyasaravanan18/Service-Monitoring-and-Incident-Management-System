@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { BrainCircuit } from "lucide-react";
+import { BrainCircuit, Sparkles, Copy, Check } from "lucide-react";
 
-export function AIPanel({ title = "SMIMP AI", children, status = "active", action }) {
+export function AIPanel({ title = "SMIMP AI Copilot", children, status = "active", action }) {
   const [typedText, setTypedText] = useState("");
+  const [copied, setCopied] = useState(false);
   const contentStr = typeof children === "string" ? children : "";
 
-  // Typing effect animation for string children
+  // Smooth typing effect animation for string children
   useEffect(() => {
     if (typeof children !== "string") return;
     
@@ -20,23 +21,60 @@ export function AIPanel({ title = "SMIMP AI", children, status = "active", actio
       } else {
         clearInterval(timerId);
       }
-    }, 20);
+    }, 15);
     
     return () => clearInterval(timerId);
   }, [children]);
 
+  const handleCopy = () => {
+    if (contentStr) {
+      navigator.clipboard.writeText(contentStr);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <div className="ai-panel">
       <div className="ai-panel-header">
-        <div className={`ai-icon ${status === "analyzing" ? "analyzing" : ""}`} style={{ color: "var(--color-brand)" }}>
-          <BrainCircuit size={16} strokeWidth={1.5} className={status === "analyzing" ? "pulse-glow" : ""} />
+        <div className={`ai-icon ${status === "analyzing" ? "analyzing" : ""}`}>
+          <BrainCircuit size={17} strokeWidth={2} />
         </div>
-        <div className="ai-title">{title}</div>
-        {status === "analyzing" && <div className="badge" style={{ marginLeft: "auto" }}>Analyzing...</div>}
-        {action && <div style={{ marginLeft: "auto" }}>{action}</div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="ai-title">{title}</span>
+          <span className="badge" style={{ 
+            background: "rgba(168, 85, 247, 0.15)", 
+            color: "#c084fc", 
+            border: "1px solid rgba(168, 85, 247, 0.3)",
+            fontSize: 10,
+            padding: "2px 8px"
+          }}>
+            <Sparkles size={11} style={{ marginRight: 4 }} />
+            Grounded Model
+          </span>
+        </div>
+
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+          {contentStr && (
+            <button 
+              className="button" 
+              style={{ padding: "4px 8px", height: "28px", fontSize: 11 }}
+              onClick={handleCopy}
+              title="Copy insight"
+            >
+              {copied ? <Check size={13} style={{ color: "var(--color-success)" }} /> : <Copy size={13} />}
+            </button>
+          )}
+          {action}
+        </div>
       </div>
-      <div className={`ai-content ${typeof children === "string" && typedText.length < children.length ? "ai-typing" : ""}`}>
-        {typeof children === "string" ? typedText : children}
+
+      <div className="ai-content">
+        {typeof children === "string" ? (
+          <div style={{ whiteSpace: "pre-wrap" }}>{typedText}</div>
+        ) : (
+          children
+        )}
       </div>
     </div>
   );

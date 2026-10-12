@@ -1,18 +1,30 @@
 import React from "react";
-import { CheckCircle2, AlertTriangle, AlertCircle, HelpCircle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, AlertCircle, HelpCircle, Activity } from "lucide-react";
 
-export function HealthPill({ value }) {
+export function HealthPill({ value, showPulse = true }) {
   const normalized = (value || "unknown").toLowerCase();
   
   let Icon = HelpCircle;
-  if (normalized === "healthy" || normalized === "operational") Icon = CheckCircle2;
-  else if (normalized === "degraded") Icon = AlertTriangle;
-  else if (normalized === "critical" || normalized === "down") Icon = AlertCircle;
+  let statusClass = "unknown";
+
+  if (normalized === "healthy" || normalized === "operational" || normalized === "active") {
+    Icon = CheckCircle2;
+    statusClass = "healthy";
+  } else if (normalized === "degraded" || normalized === "warning" || normalized === "investigating") {
+    Icon = AlertTriangle;
+    statusClass = "degraded";
+  } else if (normalized === "critical" || normalized === "down" || normalized === "failed" || normalized === "error") {
+    Icon = AlertCircle;
+    statusClass = "critical";
+  } else if (normalized === "open" || normalized === "acknowledged") {
+    Icon = Activity;
+    statusClass = "open";
+  }
 
   return (
-    <span className={`status ${normalized}`} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-      <Icon size={14} strokeWidth={2} />
-      {normalized}
+    <span className={`status ${statusClass}`}>
+      <Icon size={13} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+      <span>{normalized}</span>
     </span>
   );
 }
