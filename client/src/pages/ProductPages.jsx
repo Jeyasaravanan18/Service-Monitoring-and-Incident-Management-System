@@ -1,7 +1,9 @@
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { API_BASE, apiGet, apiPatch, apiPost } from "../lib/api.js";
+import { API_BASE, apiGet, apiPatch, apiPost, apiDelete } from "../lib/api.js";
+import { useAppStore } from "../store/useAppStore.js";
+import { redirectToGoogle } from "../lib/oauth.js";
 import { ResourceManagementPage } from "../components/ResourceManagementPage.jsx";
 import { LiveDetailPage } from "../components/LiveDetailPage.jsx";
 import { HealthPill } from "../components/HealthPill.jsx";
@@ -10,6 +12,7 @@ import { Panel, PageHeader, Topbar } from "../components/Layout.jsx";
 import { AIPanel } from "../components/AIPanel.jsx";
 import { TerminalLogViewer } from "../components/TerminalLogViewer.jsx";
 import { TelemetryChart } from "../components/TelemetryChart.jsx";
+import { RefreshCw, Sparkles } from "lucide-react";
 
 function useServiceOptions() {
   const [options, setOptions] = useState([]);
@@ -1054,9 +1057,6 @@ export function IntegrationPage() {
   );
 }
 
-import { useAppStore } from "../store/useAppStore.js";
-import { redirectToGoogle } from "../lib/oauth.js";
-
 export function ProfilePage() {
   const navigate = useNavigate();
   const addToast = useAppStore((state) => state.addToast);
@@ -2021,12 +2021,16 @@ export function AIInsightsPage() {
 
   useEffect(() => {
     refresh();
-    Promise.all([apiGet("/incidents"), apiGet("/services")]).then(([incidentsResponse, servicesResponse]) => {
-      setContext({
-        incidents: incidentsResponse.data || [],
-        services: servicesResponse.data || [],
+    Promise.all([apiGet("/incidents"), apiGet("/services")])
+      .then(([incidentsResponse, servicesResponse]) => {
+        setContext({
+          incidents: incidentsResponse?.data || [],
+          services: servicesResponse?.data || [],
+        });
+      })
+      .catch(() => {
+        setContext({ incidents: [], services: [] });
       });
-    });
   }, []);
 
   const runInsight = async (type) => {

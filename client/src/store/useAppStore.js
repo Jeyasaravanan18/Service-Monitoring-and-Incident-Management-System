@@ -55,10 +55,10 @@ export function hydrateSession() {
     const raw = localStorage.getItem("smimp-user");
     if (!raw) return null;
     const saved = JSON.parse(raw);
-    // Restore user & workspaceId but NOT the access token
     useAppStore.getState().setSession({
       user: saved?.user || null,
-      accessToken: null,          // will be refreshed on first 401
+      accessToken: saved?.accessToken || null,
+      refreshToken: saved?.refreshToken || null,
       workspaceId: saved?.workspaceId || null,
     });
     return saved;
@@ -68,22 +68,25 @@ export function hydrateSession() {
 }
 
 /**
- * Persist non-sensitive session metadata to localStorage.
- * The access token is intentionally excluded.
+ * Persist session metadata and tokens to localStorage for cross-origin continuity.
  */
 export function persistSession(session) {
   try {
+    const prev = JSON.parse(localStorage.getItem("smimp-user") || "{}");
     localStorage.setItem(
       "smimp-user",
       JSON.stringify({
-        user: session?.user || null,
+        user: session?.user ?? prev?.user ?? null,
         workspaceId:
           session?.workspaceId ||
           session?.user?.workspaceIds?.[0] ||
+          prev?.workspaceId ||
           null,
+        accessToken: session?.accessToken ?? prev?.accessToken ?? null,
+        refreshToken: session?.refreshToken ?? prev?.refreshToken ?? null,
       })
     );
-    // Also update the in-memory store with the full session (including access token)
+    // Also update the in-memory store with the full session
     useAppStore.getState().setSession(session);
   } catch {
     // localStorage unavailable — continue with memory-only session

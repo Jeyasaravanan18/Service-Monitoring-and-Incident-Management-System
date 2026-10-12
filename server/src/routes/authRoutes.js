@@ -12,7 +12,7 @@ const setRefreshCookie = (res, token) => {
   res.cookie("refreshToken", token, {
     httpOnly: true,
     secure: env.isProd,
-    sameSite: "strict",
+    sameSite: env.isProd ? "none" : "lax",
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     path: "/api/auth",
   });
@@ -65,7 +65,7 @@ router.post("/login", authLimiter, asyncHandler(async (req, res) => {
 }));
 
 router.post("/logout", asyncHandler(async (req, res) => {
-  const token = req.cookies.refreshToken;
+  const token = req.cookies.refreshToken || req.body?.refreshToken;
   if (token) {
     await revokeRefreshToken(token);
   }
@@ -79,7 +79,7 @@ router.post("/logout", asyncHandler(async (req, res) => {
 }));
 
 router.post("/refresh", asyncHandler(async (req, res) => {
-  const token = req.cookies.refreshToken;
+  const token = req.cookies.refreshToken || req.body?.refreshToken;
   if (!token) {
     throw new ApiError(401, "Refresh token required");
   }

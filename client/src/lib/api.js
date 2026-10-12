@@ -22,10 +22,17 @@ function getWorkspaceId() {
 }
 
 async function doRefresh() {
+  let savedRefreshToken = null;
+  try {
+    const raw = localStorage.getItem("smimp-user");
+    if (raw) savedRefreshToken = JSON.parse(raw)?.refreshToken;
+  } catch {}
+
   const response = await fetch(`${API_BASE}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
+    body: savedRefreshToken ? JSON.stringify({ refreshToken: savedRefreshToken }) : undefined,
   });
 
   if (!response.ok) {
