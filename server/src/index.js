@@ -10,6 +10,7 @@ import { setRealtimeServer } from "./services/realtimeService.js";
 import { recoverPendingEscalations } from "./services/escalationService.js";
 import { verifyAccessToken } from "./utils/tokens.js";
 import { isAllowedBrowserOrigin } from "./utils/origin.js";
+import { ensureDemoAccounts } from "./services/demoService.js";
 
 const allowedOrigins = [
   env.clientOrigin,
@@ -60,6 +61,7 @@ io.on("connection", (socket) => {
 });
 
 await connectDb();
+await ensureDemoAccounts();
 setRealtimeServer(io);
 registerMonitoringJob();
 registerCleanupJob();

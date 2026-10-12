@@ -269,9 +269,25 @@ function MiniBarChart({ points, labels }) {
 }
 
 export function ServicesPage() {
+  const addToast = useAppStore((state) => state.addToast);
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedDemo = async () => {
+    setSeeding(true);
+    try {
+      const res = await apiPost("/demo/seed");
+      addToast(res.message || "Demo projects & telemetry successfully loaded!", "success");
+      window.location.reload();
+    } catch (err) {
+      addToast(err.message || "Failed to seed demo projects", "error");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   return (
     <ResourceManagementPage
-      title="Services"
+      title="Services & Projects"
       copy="Manage service inventory, URLs, health checks, ownership, and maintenance controls."
       endpoint="/services"
       createLabel="Create service"
@@ -280,6 +296,18 @@ export function ServicesPage() {
       columns={serviceColumns}
       fields={serviceFields}
       badgeField="healthStatus"
+      headerAction={
+        <button
+          className="button"
+          type="button"
+          onClick={handleSeedDemo}
+          disabled={seeding}
+          title="Seed 7 realistic production microservices"
+        >
+          <Sparkles size={14} className={seeding ? "spin" : ""} style={{ color: "var(--color-brand)" }} />
+          <span>{seeding ? "Seeding..." : "Load Demo Projects"}</span>
+        </button>
+      }
     />
   );
 }

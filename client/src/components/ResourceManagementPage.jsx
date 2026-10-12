@@ -103,6 +103,7 @@ export function ResourceManagementPage({
   disableCreate = false,
   disableEdit = false,
   disableDelete = false,
+  headerAction,
 }) {
   const [state, setState] = useState({ loading: true, error: "", data: [] });
   const [filterForm, setFilterForm] = useState(() => buildInitialForm(listFilters));
@@ -247,6 +248,7 @@ export function ResourceManagementPage({
         badge={`${state.data.length} total`}
         action={
           <div className="button-row">
+            {headerAction}
             <button className="button" type="button" onClick={() => refresh()}>
               <RefreshCw size={14} className={state.loading ? "spin" : ""} />
               <span>Refresh</span>

@@ -20,6 +20,7 @@ import deploymentRoutes from "./deploymentRoutes.js";
 import metricsRoutes from "./metricsRoutes.js";
 import dependencyRoutes from "./dependencyRoutes.js";
 import escalationRoutes from "./escalationRoutes.js";
+import demoRoutes from "./demoRoutes.js";
 
 const router = Router();
 
@@ -44,6 +45,7 @@ router.use("/deployments", deploymentRoutes);
 router.use("/metrics", metricsRoutes);
 router.use("/dependencies", dependencyRoutes);
 router.use("/escalation-policies", escalationRoutes);
+router.use("/demo", demoRoutes);
 
 router.get("/health", (_req, res) => {
   res.json({ success: true, data: { status: "ok" } });

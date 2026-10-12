@@ -4,7 +4,8 @@ import {
   Server, BellRing, Flame, Activity, ArrowRight, ShieldCheck, 
   RefreshCw, CheckCircle2, AlertTriangle, AlertCircle, Sparkles, ExternalLink
 } from "lucide-react";
-import { apiGet } from "../lib/api.js";
+import { apiGet, apiPost } from "../lib/api.js";
+import { useAppStore } from "../store/useAppStore.js";
 import { useSocketEvent } from "../lib/socket.js";
 import { MetricCard } from "../components/MetricCard.jsx";
 import { HealthPill } from "../components/HealthPill.jsx";
@@ -33,6 +34,21 @@ export function DashboardPage() {
     : 0;
 
   const [flashingRows, setFlashingRows] = useState({});
+  const addToast = useAppStore((state) => state.addToast);
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedDemo = async () => {
+    setSeeding(true);
+    try {
+      const res = await apiPost("/demo/seed");
+      addToast(res.message || "Demo projects & telemetry successfully loaded!", "success");
+      await load();
+    } catch (err) {
+      addToast(err.message || "Failed to seed demo projects", "error");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const load = () => {
     return apiGet("/dashboard/overview")
@@ -98,6 +114,10 @@ export function DashboardPage() {
         badge={`${serviceCount} Services Active`}
         action={
           <div className="button-row">
+            <button className="button" onClick={handleSeedDemo} disabled={seeding} title="Seed 7 realistic production microservices, checks, and topology">
+              <Sparkles size={14} className={seeding ? "spin" : ""} style={{ color: "var(--color-brand)" }} />
+              <span>{seeding ? "Seeding..." : "Load Demo Projects"}</span>
+            </button>
             <button className="button" onClick={() => load()}>
               <RefreshCw size={14} className={loading ? "spin" : ""} />
               <span>Sync</span>
@@ -315,8 +335,22 @@ export function DashboardPage() {
                 </table>
               </div>
               {!services.length ? (
-                <div style={{ padding: "30px", textAlign: "center", color: "var(--color-muted)" }}>
-                  No services registered in this workspace yet.
+                <div style={{ padding: "32px 20px", textAlign: "center" }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "var(--color-dark-blue)", marginBottom: 6 }}>
+                    No services registered in this workspace yet
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--color-text-body)", maxWidth: 380, margin: "0 auto 16px" }}>
+                    Instantly load 7 enterprise microservices (API Gateway, Auth, Stripe, PostgreSQL, Redis) with live telemetry.
+                  </div>
+                  <button 
+                    className="button primary" 
+                    onClick={handleSeedDemo} 
+                    disabled={seeding}
+                    style={{ margin: "0 auto" }}
+                  >
+                    <Sparkles size={14} className={seeding ? "spin" : ""} />
+                    <span>{seeding ? "Generating..." : "Load Demo Projects"}</span>
+                  </button>
                 </div>
               ) : null}
             </Panel>
