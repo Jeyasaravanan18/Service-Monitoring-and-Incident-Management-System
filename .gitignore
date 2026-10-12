@@ -40,4 +40,5 @@ temp/
 *.tmp
 
 # ── Seed / Debug Scripts ──────────────────────
-server/seedDemo.js
+# ── Vercel ─────────────────────────────────────
+.vercel/
